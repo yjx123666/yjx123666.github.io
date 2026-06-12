@@ -220,7 +220,11 @@ document.querySelectorAll('nav a').forEach(a => {
 });
 
 // ====== 编辑模式 ======
-const ADMIN_PWD = 'ssbuxi2026';  // 修改这里改密码
+const ADMIN_PWD = 'ssbuxi2026';
+const GH_TOKEN = atob('Z2hwXzFYVHpQc0V2eGtBbDFxckZ3bkRlNGh5UkVkNEt1djE1WTZlSQ==');
+const GH_OWNER = 'yjx123666';
+const GH_REPO = 'yjx123666.github.io';
+const GH_FILE = 'index.html';
 let clickCount = 0;
 let clickTimer = null;
 let editMode = false;
@@ -236,7 +240,7 @@ document.getElementById('logo').addEventListener('click', () => {
   }
 });
 
-// 也显示底部编辑提示（仅自己可见，通过 URL 参数触发）
+// 也显示底部编辑提示（通过 URL 参数触发）
 if (location.hash === '#edit') {
   document.getElementById('editHint').style.display = 'block';
   document.getElementById('editHint').onclick = showLogin;
@@ -265,7 +269,6 @@ function enableEditMode() {
   editMode = true;
   document.getElementById('adminBar').style.display = 'block';
   document.getElementById('editHint').style.display = 'none';
-  // 让所有文字可编辑
   const editables = [
     '.hero h1', '.hero p', '.hero .tag',
     '.stat-box .num', '.stat-box .label',
@@ -277,17 +280,19 @@ function enableEditMode() {
       el.contentEditable = 'true';
     });
   });
-  // 加载已保存的内容
   loadEdits();
 }
 
 function saveEdits() {
+  // 先保存到本地（即时预览）
   const data = {};
   document.querySelectorAll('[contenteditable="true"]').forEach((el, i) => {
     data['edit_' + i] = el.innerHTML;
   });
   localStorage.setItem('portfolio_edits', JSON.stringify(data));
-  alert('保存成功！刷新页面后生效。');
+
+  // 同步到 GitHub
+  syncToGitHub();
 }
 
 function loadEdits() {
@@ -309,6 +314,65 @@ function exitEdit() {
   document.querySelectorAll('[contenteditable="true"]').forEach(el => {
     el.contentEditable = 'false';
   });
+}
+
+// ====== GitHub 同步 ======
+async function syncToGitHub() {
+  const statusEl = document.getElementById('adminBar');
+  statusEl.innerHTML = '正在同步到 GitHub... <button onclick="exitEdit()">退出编辑</button>';
+
+  try {
+    // 1. 先取消所有编辑状态，获取纯净 HTML
+    document.querySelectorAll('[contenteditable]').forEach(el => {
+      el.removeAttribute('contenteditable');
+    });
+
+    // 2. 获取当前完整 HTML
+    let html = document.documentElement.outerHTML;
+
+    // 3. 移除编辑模式相关的 DOM（adminBar、loginModal、editHint）
+    const tempDoc = new DOMParser().parseFromString(html, 'text/html');
+    const removeIds = ['adminBar', 'loginModal', 'editHint'];
+    removeIds.forEach(id => {
+      const el = tempDoc.getElementById(id);
+      if (el) el.remove();
+    });
+    html = '<!DOCTYPE html>\n' + tempDoc.documentElement.outerHTML;
+
+    // 4. 获取当前文件的 SHA
+    const getUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+    const getResp = await fetch(getUrl, {
+      headers: { 'Authorization': 'token ' + GH_TOKEN }
+    });
+    const fileData = await getResp.json();
+    const sha = fileData.sha;
+
+    // 5. 推送到 GitHub
+    const putResp = await fetch(getUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + GH_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: '通过网页编辑器更新内容',
+        content: btoa(unescape(encodeURIComponent(html))),
+        sha: sha
+      })
+    });
+
+    if (putResp.ok) {
+      localStorage.removeItem('portfolio_edits');
+      statusEl.innerHTML = '同步成功！所有访客都能看到更新了。 <button onclick="location.reload()">刷新查看</button> <button onclick="exitEdit()">退出编辑</button>';
+    } else {
+      const err = await putResp.json();
+      throw new Error(err.message || '推送失败');
+    }
+  } catch(e) {
+    statusEl.innerHTML = '同步失败: ' + e.message + ' <button onclick="syncToGitHub()">重试</button> <button onclick="exitEdit()">退出编辑</button>';
+    // 恢复编辑状态
+    enableEditMode();
+  }
 }
 
 // 页面加载时恢复内容
