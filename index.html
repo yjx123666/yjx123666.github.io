@@ -59,7 +59,7 @@
   .card {
     background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
     overflow: hidden; transition: transform .3s, box-shadow .3s;
-    cursor: default;
+    cursor: pointer; text-decoration: none; color: inherit; display: block;
   }
   .card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px #00d2ff22; }
   .card-img {
@@ -136,7 +136,7 @@
   <h2>作品展示</h2>
   <div class="gallery">
 
-    <div class="card">
+    <a href="GIS工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#3742fa)">🗺️</div>
       <div class="card-body">
         <h3>GIS 批量格式转换工具</h3>
@@ -144,9 +144,9 @@
         <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
         <div class="card-date">2026 年 6 月</div>
       </div>
-    </div>
+    </a>
 
-    <div class="card">
+    <a href="新媒体工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#a55eea,#8854d0)">📊</div>
       <div class="card-body">
         <h3>新媒体数据采集与分析工具</h3>
@@ -154,7 +154,7 @@
         <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>matplotlib</span></div>
         <div class="card-date">2026 年 6 月</div>
       </div>
-    </div>
+    </a>
 
   </div>
 </section>

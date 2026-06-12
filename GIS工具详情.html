@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIS 批量格式转换工具</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', sans-serif; background: #0f0f1a; color: #e0e0e0; }
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(15,15,26,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #1e1e3a;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 56px;
+  }
+  nav .logo { font-size: 20px; font-weight: bold; color: #00d2ff; }
+  nav .back { color: #aaa; text-decoration: none; font-size: 15px; }
+  nav .back:hover { color: #00d2ff; }
+  .container { max-width: 900px; margin: 0 auto; padding: 90px 20px 60px; }
+  .page-header { text-align: center; margin-bottom: 50px; }
+  .page-header .icon { font-size: 64px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 36px; margin-bottom: 12px; }
+  .page-header h1 span { color: #00d2ff; }
+  .page-header p { font-size: 16px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+  .page-header .tags { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .page-header .tag {
+    padding: 5px 16px; border-radius: 20px; font-size: 13px;
+    border: 1px solid #00d2ff44; color: #00d2ff; background: #00d2ff11;
+  }
+  .block {
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
+    padding: 32px; margin-bottom: 28px;
+  }
+  .block h2 {
+    font-size: 22px; margin-bottom: 18px; color: #00d2ff;
+    border-left: 4px solid #00d2ff; padding-left: 12px;
+  }
+  .block p, .block li { font-size: 15px; color: #aaa; line-height: 1.8; }
+  .block ul { padding-left: 20px; }
+  .block li { margin-bottom: 8px; }
+  .screenshot-placeholder {
+    width: 100%; min-height: 300px; background: #1a1a3e; border: 2px dashed #2a2a4a;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #444; font-size: 16px; margin: 16px 0;
+  }
+  .code-block {
+    background: #0d0d1a; border: 1px solid #1e1e3a; border-radius: 8px;
+    padding: 20px; font-family: 'Consolas', monospace; font-size: 14px;
+    color: #8be9fd; overflow-x: auto; margin: 16px 0; white-space: pre-wrap;
+  }
+  .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .info-table th, .info-table td {
+    padding: 12px 16px; text-align: left; border-bottom: 1px solid #1e1e3a; font-size: 14px;
+  }
+  .info-table th { color: #00d2ff; width: 140px; }
+  footer {
+    text-align: center; padding: 40px 20px; font-size: 13px; color: #444;
+    border-top: 1px solid #1e1e3a;
+  }
+  footer a { color: #00d2ff; text-decoration: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">GIS 批量格式转换工具</div>
+  <a class="back" href="index.html">&larr; 返回作品集</a>
+</nav>
+<div class="container">
+  <div class="page-header">
+    <div class="icon">🗺️</div>
+    <h1>GIS <span>批量格式转换工具</span></h1>
+    <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。</p>
+    <div class="tags">
+      <span class="tag">Python</span><span class="tag">ArcGIS</span><span class="tag">arcpy</span><span class="tag">GIS</span>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>项目介绍</h2>
+    <p>在日常 GIS 工作中，经常需要在不同格式之间转换数据。手动操作效率低且容易出错，因此开发了这个批量转换工具，只需在 ArcGIS 中导入工具箱即可一键完成格式转换。</p>
+  </div>
+
+  <div class="block">
+    <h2>功能特点</h2>
+    <ul>
+      <li>支持 SHP、DWG、MDB、GDB、KML 五种格式互相转换</li>
+      <li>批量处理，一次转换整个文件夹的数据</li>
+      <li>兼容 ArcMap 10.8 和 ArcGIS Pro</li>
+      <li>纯 Python 2.7 编写，无额外依赖</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>使用方法</h2>
+    <ul>
+      <li>在 ArcGIS 中打开目录窗口</li>
+      <li>右键文件夹 → 添加工具箱 → 选择 GIS_Converter.pyt</li>
+      <li>展开工具箱，双击需要的转换工具</li>
+      <li>选择输入文件和输出位置，点击确定</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>界面截图</h2>
+    <div class="screenshot-placeholder">
+      <!-- 替换为实际截图：<img src="截图文件名.png" style="width:100%"> -->
+      在此放置截图
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>技术细节</h2>
+    <table class="info-table">
+      <tr><th>开发语言</th><td>Python 2.7</td></tr>
+      <tr><th>依赖库</th><td>arcpy（ArcGIS 内置）</td></tr>
+      <tr><th>兼容平台</th><td>ArcMap 10.8 / ArcGIS Pro</td></tr>
+      <tr><th>文件格式</th><td>.pyt（Python Toolbox）</td></tr>
+    </table>
+  </div>
+
+  <div class="block">
+    <h2>核心代码片段</h2>
+    <div class="code-block">
+def _call_conversion(tool_name, *args):
+    """兼容 ArcMap 和 ArcGIS Pro 的转换调用"""
+    tool = getattr(arcpy.conversion, tool_name, None)
+    if tool:
+        tool(*args)
+    else:
+        # ArcMap 兼容方案
+        arcpy.AddMessage("Using fallback for " + tool_name)
+    </div>
+  </div>
+</div>
+<footer>
+  <p>GIS 批量格式转换工具 &copy; 2026 &nbsp;|&nbsp; <a href="index.html">返回作品集</a></p>
+</footer>
+</body>
+</html>
