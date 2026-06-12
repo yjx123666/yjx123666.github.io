@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习成果展示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', sans-serif; background: #0f0f1a; color: #e0e0e0; }
+
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(15,15,26,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #1e1e3a;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 56px;
+  }
+  nav .logo { font-size: 20px; font-weight: bold; color: #00d2ff; }
+  nav ul { list-style: none; display: flex; gap: 28px; }
+  nav a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+  nav a:hover { color: #00d2ff; }
+
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 80px 20px 40px;
+    background: radial-gradient(ellipse at 50% 30%, #1a1a3e 0%, #0f0f1a 70%);
+  }
+  .hero .avatar {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, #00d2ff, #7b2ff7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: #fff; margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(0,210,255,0.3);
+  }
+  .hero h1 { font-size: 42px; margin-bottom: 10px; }
+  .hero h1 span { color: #00d2ff; }
+  .hero p { font-size: 18px; color: #888; max-width: 600px; line-height: 1.7; }
+  .hero .tags { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .hero .tag {
+    padding: 5px 16px; border-radius: 20px; font-size: 13px;
+    border: 1px solid #00d2ff44; color: #00d2ff; background: #00d2ff11;
+  }
+
+  section { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
+  section h2 {
+    font-size: 30px; text-align: center; margin-bottom: 50px;
+    position: relative;
+  }
+  section h2::after {
+    content: ''; display: block; width: 50px; height: 3px;
+    background: #00d2ff; margin: 12px auto 0; border-radius: 2px;
+  }
+
+  .gallery {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
+    overflow: hidden; transition: transform .3s, box-shadow .3s;
+    cursor: default;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px #00d2ff22; }
+  .card-img {
+    height: 180px; display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: #fff;
+  }
+  .card-body { padding: 20px; }
+  .card-body h3 { font-size: 18px; margin-bottom: 8px; }
+  .card-body p { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 12px; }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card-tags span {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px;
+    background: #00d2ff15; color: #00d2ff; border: 1px solid #00d2ff33;
+  }
+  .card-date { font-size: 12px; color: #555; margin-top: 10px; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px; text-align: center; margin-bottom: 60px;
+  }
+  .stat-box {
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 12px;
+    padding: 28px 16px;
+  }
+  .stat-box .num { font-size: 36px; font-weight: bold; color: #00d2ff; }
+  .stat-box .label { font-size: 14px; color: #888; margin-top: 6px; }
+
+  footer {
+    text-align: center; padding: 40px 20px; font-size: 13px; color: #444;
+    border-top: 1px solid #1e1e3a;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 16px; }
+    nav ul { gap: 14px; }
+    section { padding: 50px 16px; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">My Portfolio</div>
+  <ul>
+    <li><a href="#home">首页</a></li>
+    <li><a href="#portfolio">作品</a></li>
+  </ul>
+</nav>
+
+<div class="hero" id="home">
+  <div class="avatar">👤</div>
+  <h1>你好，我是 <span>你的名字</span></h1>
+  <p>这里是一段个人简介。你可以介绍自己的学习方向、兴趣爱好和目标。用两三句话让别人快速了解你。</p>
+  <div class="tags">
+    <span class="tag">Web 开发</span>
+    <span class="tag">Python</span>
+    <span class="tag">GIS 地理信息</span>
+    <span class="tag">数据分析</span>
+    <span class="tag">自动化办公</span>
+  </div>
+</div>
+
+<section>
+  <div class="stats">
+    <div class="stat-box"><div class="num">2</div><div class="label">完成项目</div></div>
+    <div class="stat-box"><div class="num">6</div><div class="label">掌握技能</div></div>
+    <div class="stat-box"><div class="num">3</div><div class="label">技术领域</div></div>
+    <div class="stat-box"><div class="num">500+</div><div class="label">学习小时</div></div>
+  </div>
+</section>
+
+<section id="portfolio">
+  <h2>作品展示</h2>
+  <div class="gallery">
+
+    <div class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#3742fa)">🗺️</div>
+      <div class="card-body">
+        <h3>GIS 批量格式转换工具</h3>
+        <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。纯 Python 2.7 编写，无需额外依赖。</p>
+        <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
+        <div class="card-date">2026 年 6 月</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#a55eea,#8854d0)">📊</div>
+      <div class="card-body">
+        <h3>新媒体数据采集与分析工具</h3>
+        <p>带 GUI 界面的桌面应用，批量提取抖音/小红书分享链接中的标题、点赞、评论、收藏等数据，支持导出 Excel 和可视化图表分析。</p>
+        <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>matplotlib</span></div>
+        <div class="card-date">2026 年 6 月</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <p>学习成果展示页 &copy; 2026 &nbsp;|&nbsp; 用 ❤️ 制作</p>
+</footer>
+
+<script>
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
