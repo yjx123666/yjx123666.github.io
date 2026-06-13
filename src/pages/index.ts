@@ -4,9 +4,11 @@ import { initFadeIn } from '../modules/fadeIn';
 import { initEditMode } from '../modules/editMode';
 import { initTypingAnimation } from '../modules/typing';
 import { initMusic } from '../modules/music';
+import { initContour } from '../modules/contour';
 
-// Particle system
-initParticles(80);
+// Background systems
+initParticles(50);
+initContour();
 
 // Scroll fade-in
 initFadeIn();
@@ -21,7 +23,7 @@ initMusic();
 const editHandle = initEditMode({
   editableSelectors: [
     '.hero h1',
-    '.hero p',
+    '.hero-description',
     '.hero .tag',
     '.card-body h3',
     '.card-body p',
