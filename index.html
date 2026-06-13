@@ -78,6 +78,21 @@
     }
   }
 
+  .highlight-char {
+    color: #00d2ff !important;
+    text-shadow: 0 0 15px rgba(0,210,255,0.8), 0 0 30px rgba(0,210,255,0.4);
+    animation: charAppear 0.2s ease forwards, highlightPulse 1.5s ease-in-out infinite 0.3s;
+  }
+
+  @keyframes highlightPulse {
+    0%, 100% {
+      text-shadow: 0 0 15px rgba(0,210,255,0.8), 0 0 30px rgba(0,210,255,0.4);
+    }
+    50% {
+      text-shadow: 0 0 25px rgba(0,210,255,1), 0 0 50px rgba(0,210,255,0.6), 0 0 80px rgba(0,210,255,0.3);
+    }
+  }
+
   .card::before {
     content: ''; position: absolute; top: -50%; left: -50%;
     width: 200%; height: 200%;
@@ -255,9 +270,24 @@ document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
         const span = document.createElement('span');
         span.className = 'char';
         span.style.animationDelay = `${i * 0.05}s`;
-        span.innerHTML = char;
-        el.appendChild(span);
-        i++;
+
+        // 检测"伤口"二字，添加特殊效果
+        if (char === '伤' || char === '口') {
+          span.classList.add('highlight-char');
+          span.innerHTML = char;
+          el.appendChild(span);
+          i++;
+
+          // 伤口出现更快，添加发光效果
+          el.classList.add('typing-active');
+          const speed = 30 + Math.random() * 20; // 更快的速度
+          setTimeout(typeNextChar, speed);
+          return;
+        } else {
+          span.innerHTML = char;
+          el.appendChild(span);
+          i++;
+        }
       }
 
       // 添加打字中的发光效果
