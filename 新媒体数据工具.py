@@ -1,0 +1,1101 @@
+# -*- coding: utf-8 -*-
+"""
+新媒体数据采集与分析工具
+支持抖音/小红书分享链接批量提取数据，导出Excel，数据分析可视化
+"""
+
+import os
+import re
+import json
+import time
+import queue
+import threading
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+from datetime import datetime
+
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from selenium import webdriver
+from selenium.webdriver.edge.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# =========================================================================
+# 数据提取引擎
+# =========================================================================
+
+class DouyinScraper:
+    def __init__(self, headless=True):
+        self.headless = headless
+        self.driver = None
+
+    def _init_driver(self):
+        options = Options()
+        if self.headless:
+            options.add_argument("--headless=new")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--log-level=3")
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        self.driver = webdriver.Edge(options=options)
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
+        )
+
+    def _ensure_driver(self):
+        if self.driver is None:
+            self._init_driver()
+
+    def _extract_url(self, text):
+        """从分享文本中提取URL"""
+        match = re.search(r'https?://[^\s]+', text)
+        if match:
+            return match.group().rstrip("/")
+        return text.strip()
+
+    def extract(self, url):
+        self._ensure_driver()
+        real_url = self._extract_url(url)
+        try:
+            real_url = self._resolve_url(real_url)
+            data = self._extract_data(real_url)
+            # 如果提取到的数据标题为空，保存调试信息
+            if not data.get("title"):
+                self._save_debug(real_url)
+            return self._fill_defaults(data, url)
+        except Exception as e:
+            self._save_debug(real_url)
+            return self._fill_defaults({"url": url, "error": str(e)}, url)
+
+    def _save_debug(self, url):
+        """保存截图和页面源码用于调试"""
+        debug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug")
+        if not os.path.isdir(debug_dir):
+            os.makedirs(debug_dir)
+        try:
+            self.driver.save_screenshot(os.path.join(debug_dir, "screenshot.png"))
+        except Exception:
+            pass
+        try:
+            with open(os.path.join(debug_dir, "page_source.html"), "w", encoding="utf-8") as f:
+                f.write(self.driver.page_source)
+        except Exception:
+            pass
+        try:
+            with open(os.path.join(debug_dir, "current_url.txt"), "w", encoding="utf-8") as f:
+                f.write(self.driver.current_url)
+        except Exception:
+            pass
+
+    def _fill_defaults(self, data, url):
+        defaults = {"url": url, "platform": "douyin", "author": "", "title": "",
+                    "likes": 0, "comments": 0, "collects": 0, "shares": 0, "views": 0}
+        for k, v in defaults.items():
+            if k not in data:
+                data[k] = v
+        return data
+
+    def _resolve_url(self, url):
+        self.driver.get(url)
+        time.sleep(2)
+        return self.driver.current_url
+
+    def _extract_data(self, url):
+        time.sleep(4)
+        result = {"url": url, "platform": "douyin"}
+
+        # 方案1: 用JS从页面script标签中提取嵌入的JSON数据
+        data = self._try_js_extract()
+        if data and data.get("title"):
+            return data
+
+        # 方案2: 从RENDER_DATA提取
+        data = self._try_render_data()
+        if data and data.get("title"):
+            return data
+
+        # 方案3: DOM提取
+        return self._extract_from_dom(url)
+
+    def _try_js_extract(self):
+        """用JS遍历所有script标签，查找包含视频数据的JSON"""
+        try:
+            js_code = """
+            var scripts = document.querySelectorAll('script');
+            for (var i = 0; i < scripts.length; i++) {
+                var text = scripts[i].textContent;
+                if (text && text.indexOf('awemeDetail') !== -1) {
+                    var match = text.match(/"awemeDetail"\\s*:\\s*(\\{[^}]*"desc"[\\s\\S]*?\\})\\s*[,}]/);
+                    if (match) return match[1];
+                }
+                if (text && text.indexOf('aweme_detail') !== -1) {
+                    var match = text.match(/"aweme_detail"\\s*:\\s*(\\{[^}]*"desc"[\\s\\S]*?\\})\\s*[,}]/);
+                    if (match) return match[1];
+                }
+            }
+            return null;
+            """
+            raw = self.driver.execute_script(js_code)
+            if raw:
+                detail = json.loads(raw)
+                return self._build_result_from_detail(detail)
+        except Exception:
+            pass
+
+        # 尝试从页面全局变量获取
+        try:
+            js_code2 = """
+            try {
+                var data = null;
+                if (window.__INITIAL_STATE__) data = window.__INITIAL_STATE__;
+                if (window.__NEXT_DATA__) data = window.__NEXT_DATA__;
+                if (window._SSR_DATA) data = window._SSR_DATA;
+                if (!data) return null;
+                var detail = null;
+                function find(obj, depth) {
+                    if (depth > 5 || !obj) return;
+                    if (typeof obj !== 'object') return;
+                    if (obj.awemeDetail) { detail = obj.awemeDetail; return; }
+                    if (obj.aweme_detail) { detail = obj.aweme_detail; return; }
+                    if (obj.desc && obj.statistics) { detail = obj; return; }
+                    for (var k in obj) { find(obj[k], depth+1); }
+                }
+                find(data, 0);
+                return detail ? JSON.stringify(detail) : null;
+            } catch(e) { return null; }
+            """
+            raw2 = self.driver.execute_script(js_code2)
+            if raw2:
+                detail = json.loads(raw2)
+                return self._build_result_from_detail(detail)
+        except Exception:
+            pass
+
+        return None
+
+    def _build_result_from_detail(self, detail):
+        result = {"platform": "douyin"}
+        try:
+            result["title"] = detail.get("desc", "") or ""
+            # 作者
+            author_info = detail.get("author", {})
+            if isinstance(author_info, dict):
+                result["author"] = author_info.get("nickname", "") or author_info.get("nick_name", "")
+            else:
+                result["author"] = str(author_info)
+            # 统计数据
+            stats = detail.get("statistics", {}) or detail.get("stats", {})
+            if isinstance(stats, dict):
+                result["likes"] = self._safe_int(stats.get("digg_count") or stats.get("diggCount"))
+                result["comments"] = self._safe_int(stats.get("comment_count") or stats.get("commentCount"))
+                result["collects"] = self._safe_int(stats.get("collect_count") or stats.get("collectCount"))
+                result["shares"] = self._safe_int(stats.get("share_count") or stats.get("shareCount"))
+                result["views"] = self._safe_int(stats.get("play_count") or stats.get("playCount"))
+            return result
+        except Exception:
+            return result
+
+    def _try_render_data(self):
+        try:
+            import urllib.parse
+            script = self.driver.execute_script(
+                "var el = document.getElementById('RENDER_DATA'); "
+                "return el ? el.textContent : null;"
+            )
+            if script:
+                decoded = json.loads(urllib.parse.unquote(script))
+                detail = self._deep_find(decoded, "awemeDetail") or self._deep_find(decoded, "aweme_detail")
+                if detail:
+                    return self._build_result_from_detail(detail)
+        except Exception:
+            pass
+        return None
+
+    def _extract_from_dom(self, url):
+        """DOM方式提取 - 通过JS获取页面上所有可见文本并解析"""
+        result = {"url": url, "platform": "douyin"}
+        try:
+            js_result = self.driver.execute_script("""
+            var result = {};
+
+            // 标题: 尝试多种选择器
+            var titleEl = document.querySelector('[data-e2e="video-desc"] span')
+                || document.querySelector('[data-e2e="video-desc"]')
+                || document.querySelector('h1')
+                || document.querySelector('.video-info-detail');
+            result.title = titleEl ? titleEl.textContent.trim() : document.title;
+
+            // 作者
+            var authorEl = document.querySelector('[data-e2e="user-info"]')
+                || document.querySelector('[data-e2e="video-author-name"]');
+            if (authorEl) {
+                var authorText = authorEl.textContent.trim();
+                var match = authorText.match(/^(.+?)粉丝/);
+                result.author = match ? match[1].trim() : authorText.substring(0, 20);
+            } else {
+                result.author = '';
+            }
+
+            // 互动数据 - 右侧竖排图标下方的数字
+            // 抖音视频页右侧有4个图标：点赞、评论、收藏、转发
+            var actionItems = document.querySelectorAll('[class*="action"] [class*="count"], [class*="ActionBar"] span, [class*="toolbar"] span');
+            var numbers = [];
+            for (var i = 0; i < actionItems.length; i++) {
+                var text = actionItems[i].textContent.trim();
+                if (/^[\\d.]+[万亿wW]?$/.test(text)) {
+                    numbers.push(text);
+                }
+            }
+            result.numbers = numbers;
+
+            // 备选：查找所有 data-e2e 属性
+            var e2e_map = {};
+            var allE2e = document.querySelectorAll('[data-e2e]');
+            for (var j = 0; j < allE2e.length; j++) {
+                var attr = allE2e[j].getAttribute('data-e2e');
+                var text = allE2e[j].textContent.trim();
+                if (text && text.length < 20) {
+                    e2e_map[attr] = text;
+                }
+            }
+            result.e2e = e2e_map;
+
+            // 查找页面上所有数字文本（备选）
+            var allSpans = document.querySelectorAll('span');
+            var allNums = [];
+            for (var k = 0; k < allSpans.length; k++) {
+                var t = allSpans[k].textContent.trim();
+                if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 10) {
+                    var parent = allSpans[k].parentElement;
+                    var parentClass = parent ? parent.className : '';
+                    allNums.push({text: t, parentClass: parentClass});
+                }
+            }
+            result.allNums = allNums.slice(0, 20);
+
+            return result;
+            """)
+
+            result["title"] = js_result.get("title", "")
+            result["author"] = js_result.get("author", "")
+
+            # 从 data-e2e 属性提取（值可能是字符串或列表）
+            e2e = js_result.get("e2e", {})
+            def _get_e2e_val(key):
+                val = e2e.get(key)
+                if isinstance(val, list):
+                    return val[0] if val else None
+                return val
+
+            e2e_likes = _get_e2e_val("video-player-digg")
+            e2e_comments = _get_e2e_val("feed-comment-icon")
+            e2e_collects = _get_e2e_val("video-player-collect")
+            e2e_shares = _get_e2e_val("video-player-share")
+
+            if e2e_likes:
+                result["likes"] = self._parse_number(e2e_likes)
+            if e2e_comments:
+                result["comments"] = self._parse_number(e2e_comments)
+            if e2e_collects:
+                result["collects"] = self._parse_number(e2e_collects)
+            if e2e_shares:
+                result["shares"] = self._parse_number(e2e_shares)
+
+            # 如果 e2e 没拿到，用位置推断
+            numbers = js_result.get("numbers", [])
+            if not e2e_likes and len(numbers) >= 4:
+                result["likes"] = self._parse_number(numbers[0])
+                result["comments"] = self._parse_number(numbers[1])
+                result["collects"] = self._parse_number(numbers[2])
+                result["shares"] = self._parse_number(numbers[3])
+
+        except Exception as e:
+            result["error"] = str(e)
+        return self._fill_defaults(result, url)
+
+    def _deep_find(self, obj, key):
+        if isinstance(obj, dict):
+            if key in obj:
+                return obj[key]
+            for v in obj.values():
+                found = self._deep_find(v, key)
+                if found is not None:
+                    return found
+        elif isinstance(obj, list):
+            for item in obj:
+                found = self._deep_find(item, key)
+                if found is not None:
+                    return found
+        return None
+
+    def _parse_number(self, text):
+        if not text:
+            return 0
+        text = text.strip().replace(",", "")
+        multipliers = {"w": 10000, "W": 10000, "万": 10000, "亿": 100000000}
+        for suffix, mul in multipliers.items():
+            if text.endswith(suffix):
+                try:
+                    return int(float(text[:-1]) * mul)
+                except ValueError:
+                    return 0
+        try:
+            return int(float(text))
+        except ValueError:
+            return 0
+
+    def _safe_int(self, val):
+        if val is None:
+            return 0
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return 0
+
+    def close(self):
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            self.driver = None
+
+
+# =========================================================================
+# 小红书数据提取引擎
+# =========================================================================
+
+class XiaohongshuScraper:
+    def __init__(self, headless=True):
+        self.headless = headless
+        self.driver = None
+
+    def _init_driver(self):
+        options = Options()
+        if self.headless:
+            options.add_argument("--headless=new")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--log-level=3")
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        self.driver = webdriver.Edge(options=options)
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
+        )
+
+    def _ensure_driver(self):
+        if self.driver is None:
+            self._init_driver()
+
+    def _extract_url(self, text):
+        match = re.search(r'https?://[^\s]+', text)
+        if match:
+            return match.group().rstrip("/")
+        return text.strip()
+
+    def extract(self, url):
+        self._ensure_driver()
+        real_url = self._extract_url(url)
+        try:
+            real_url = self._resolve_url(real_url)
+            data = self._extract_data(real_url)
+            return self._fill_defaults(data, url)
+        except Exception as e:
+            return self._fill_defaults({"url": url, "error": str(e)}, url)
+
+    def _fill_defaults(self, data, url):
+        defaults = {"url": url, "platform": "xiaohongshu", "author": "", "title": "",
+                    "likes": 0, "comments": 0, "collects": 0, "shares": 0, "views": 0}
+        for k, v in defaults.items():
+            if k not in data:
+                data[k] = v
+        return data
+
+    def _resolve_url(self, url):
+        self.driver.get(url)
+        time.sleep(3)
+        return self.driver.current_url
+
+    def _extract_data(self, url):
+        time.sleep(3)
+        result = {"url": url, "platform": "xiaohongshu"}
+
+        js_result = self.driver.execute_script("""
+        var result = {};
+
+        // 标题
+        var titleEl = document.querySelector('#detail-desc')
+            || document.querySelector('[class*="title"]')
+            || document.querySelector('.note-text');
+        result.title = titleEl ? titleEl.textContent.trim().substring(0, 200) : document.title;
+
+        // 作者
+        var authorEl = document.querySelector('.author-wrapper .username')
+            || document.querySelector('[class*="author"] [class*="name"]')
+            || document.querySelector('.user-name');
+        result.author = authorEl ? authorEl.textContent.trim() : '';
+
+        // 互动数据 - 小红书的点赞、评论、收藏、转发
+        var result_nums = {};
+
+        // 方式1: 通过 class 名查找
+        var likeEl = document.querySelector('[class*="like"] [class*="count"], [class*="like-wrapper"] span')
+            || document.querySelector('.like-wrapper .count');
+        var commentEl = document.querySelector('[class*="chat"] [class*="count"], [class*="comment-wrapper"] span')
+            || document.querySelector('.chat-wrapper .count');
+        var collectEl = document.querySelector('[class*="collect"] [class*="count"], [class*="collect-wrapper"] span')
+            || document.querySelector('.collect-wrapper .count');
+        var shareEl = document.querySelector('[class*="share"] [class*="count"], [class*="share-wrapper"] span');
+
+        if (likeEl) result_nums.likes = likeEl.textContent.trim();
+        if (commentEl) result_nums.comments = commentEl.textContent.trim();
+        if (collectEl) result_nums.collects = collectEl.textContent.trim();
+        if (shareEl) result_nums.shares = shareEl.textContent.trim();
+
+        // 方式2: 通过 data-e2e 属性
+        var allE2e = document.querySelectorAll('[data-e2e]');
+        var e2e = {};
+        for (var i = 0; i < allE2e.length; i++) {
+            var key = allE2e[i].getAttribute('data-e2e');
+            var text = allE2e[i].textContent.trim().substring(0, 50);
+            if (!e2e[key]) e2e[key] = [];
+            e2e[key].push(text);
+        }
+        result.e2e = e2e;
+        result.nums = result_nums;
+
+        // 方式3: 查找互动栏的所有数字
+        var interactBar = document.querySelector('[class*="interact"], [class*="engage"], [class*="bottom-bar"]');
+        if (interactBar) {
+            var spans = interactBar.querySelectorAll('span');
+            var nums = [];
+            for (var j = 0; j < spans.length; j++) {
+                var t = spans[j].textContent.trim();
+                if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 10) {
+                    nums.push(t);
+                }
+            }
+            result.interactNums = nums;
+        }
+
+        return result;
+        """)
+
+        result["title"] = js_result.get("title", "")
+        result["author"] = js_result.get("author", "")
+
+        # 从 nums 提取
+        nums = js_result.get("nums", {})
+        if nums.get("likes"):
+            result["likes"] = self._parse_number(nums["likes"])
+        if nums.get("comments"):
+            result["comments"] = self._parse_number(nums["comments"])
+        if nums.get("collects"):
+            result["collects"] = self._parse_number(nums["collects"])
+        if nums.get("shares"):
+            result["shares"] = self._parse_number(nums["shares"])
+
+        # 从 e2e 提取
+        e2e = js_result.get("e2e", {})
+        if not result.get("likes"):
+            for key in ["like-count", "likeCount", "digg-count"]:
+                if e2e.get(key):
+                    val = e2e[key][0] if isinstance(e2e[key], list) else e2e[key]
+                    result["likes"] = self._parse_number(val)
+                    break
+
+        # 从 interactNums 位置推断
+        interact_nums = js_result.get("interactNums", [])
+        if not result.get("likes") and len(interact_nums) >= 4:
+            result["likes"] = self._parse_number(interact_nums[0])
+            result["comments"] = self._parse_number(interact_nums[1])
+            result["collects"] = self._parse_number(interact_nums[2])
+            result["shares"] = self._parse_number(interact_nums[3])
+
+        return result
+
+    def _parse_number(self, text):
+        if not text:
+            return 0
+        text = str(text).strip().replace(",", "")
+        multipliers = {"w": 10000, "W": 10000, "万": 10000, "亿": 100000000}
+        for suffix, mul in multipliers.items():
+            if text.endswith(suffix):
+                try:
+                    return int(float(text[:-1]) * mul)
+                except ValueError:
+                    return 0
+        try:
+            return int(float(text))
+        except ValueError:
+            return 0
+
+    def close(self):
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            self.driver = None
+
+
+# =========================================================================
+# 采集线程
+# =========================================================================
+
+class ScraperThread(threading.Thread):
+    def __init__(self, scraper, urls, msg_queue, platform="douyin"):
+        threading.Thread.__init__(self)
+        self.scraper = scraper
+        self.urls = urls
+        self.queue = msg_queue
+        self.platform = platform
+        self.daemon = True
+
+    def run(self):
+        total = len(self.urls)
+        for i, url in enumerate(self.urls):
+            url = url.strip()
+            if not url:
+                continue
+            self.queue.put({"type": "log", "text": "[{}/{}] {}".format(i + 1, total, url)})
+            try:
+                data = self.scraper.extract(url)
+                if "error" in data:
+                    self.queue.put({"type": "log", "text": "  FAILED: " + data["error"]})
+                else:
+                    likes = data.get("likes", 0)
+                    self.queue.put({"type": "log", "text": "  OK: {} likes={}".format(
+                        data.get("title", "")[:30], likes)})
+                self.queue.put({"type": "result", "data": data})
+            except Exception as e:
+                self.queue.put({"type": "log", "text": "  ERROR: " + str(e)})
+                self.queue.put({"type": "result", "data": {"url": url, "error": str(e)}})
+            self.queue.put({"type": "progress", "current": i + 1, "total": total})
+        self.queue.put({"type": "done"})
+
+
+# =========================================================================
+# 数据分析
+# =========================================================================
+
+class DataAnalyzer:
+    def __init__(self, data_list):
+        self.df = pd.DataFrame(data_list)
+
+    def to_excel(self, filepath):
+        cols = ["url", "platform", "author", "title", "likes", "comments",
+                "collects", "shares", "views"]
+        col_names = {
+            "url": "链接", "platform": "平台", "author": "作者",
+            "title": "标题", "likes": "点赞", "comments": "评论",
+            "collects": "收藏", "shares": "转发", "views": "播放量"
+        }
+        # 确保所有列都存在，缺失的填0
+        df_out = self.df.copy()
+        for c in cols:
+            if c not in df_out.columns:
+                df_out[c] = 0
+        df_out = df_out[cols]
+        df_out.rename(columns=col_names, inplace=True)
+        writer = pd.ExcelWriter(filepath, engine="openpyxl")
+        df_out.to_excel(writer, index=False, sheet_name="数据")
+        ws = writer.sheets["数据"]
+        for col_cells in ws.columns:
+            max_len = 0
+            for cell in col_cells:
+                try:
+                    cell_len = len(str(cell.value or ""))
+                    max_len = max(max_len, cell_len)
+                except Exception:
+                    pass
+            ws.column_dimensions[col_cells[0].column_letter].width = min(max_len + 4, 50)
+        ws.freeze_panes = "A2"
+        writer.close()
+
+    def get_summary(self):
+        numeric_cols = ["likes", "comments", "collects", "shares", "views"]
+        existing = [c for c in numeric_cols if c in self.df.columns]
+        if not existing:
+            return "No numeric data"
+        desc = self.df[existing].describe().round(0).astype(int)
+        return desc.to_string()
+
+    def get_top(self, column="likes", n=10):
+        if column not in self.df.columns:
+            return pd.DataFrame()
+        top = self.df.nlargest(n, column)
+        display_cols = ["title", "author", column]
+        existing = [c for c in display_cols if c in top.columns]
+        return top[existing]
+
+
+# =========================================================================
+# 主界面
+# =========================================================================
+
+class Application(ttk.Window):
+    def __init__(self):
+        ttk.Window.__init__(self, title="新媒体数据采集与分析工具", themename="cosmo",
+                            size=(960, 680), minsize=(800, 550))
+        self.msg_queue = queue.Queue()
+        self.results = []
+        self.scraper = None
+        self.is_running = False
+        self._build_ui()
+
+    def _build_ui(self):
+        # --- 标题栏 ---
+        frm_header = ttk.Frame(self, padding=10)
+        frm_header.pack(fill=X)
+        ttk.Label(frm_header, text="新媒体数据采集与分析工具",
+                  font=("Microsoft YaHei UI", 16, "bold")).pack(side=LEFT)
+        ttk.Label(frm_header, text="  支持抖音 / 小红书",
+                  font=("Microsoft YaHei UI", 9), bootstyle="secondary").pack(side=LEFT, padx=(5, 0), pady=(5, 0))
+
+        # --- 输入区 ---
+        frm_input = ttk.LabelFrame(self, text=" 链接输入（每行一个，支持粘贴分享文本）")
+        frm_input.pack(fill=X, padx=15, pady=(5, 8))
+
+        self.txt_input = tk.Text(frm_input, height=5, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
+                                 relief=FLAT, padx=8, pady=6)
+        self.txt_input.pack(fill=X, side=LEFT, expand=True)
+
+        scrollbar = ttk.Scrollbar(frm_input, command=self.txt_input.yview, bootstyle="info-round")
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.txt_input.config(yscrollcommand=scrollbar.set)
+
+        # --- 按钮区 ---
+        frm_btns = ttk.Frame(self, padding=(15, 0))
+        frm_btns.pack(fill=X, pady=(0, 5))
+
+        ttk.Label(frm_btns, text="平台:", font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 4))
+        self.platform_var = tk.StringVar(value="auto")
+        platform_combo = ttk.Combobox(frm_btns, textvariable=self.platform_var,
+                                       values=["auto", "douyin", "xiaohongshu"],
+                                       state="readonly", width=12, font=("Microsoft YaHei UI", 9))
+        platform_combo.pack(side=LEFT, padx=(0, 12))
+
+        self.btn_start = ttk.Button(frm_btns, text="  开始采集", command=self.start_scrape,
+                                     bootstyle="success", width=10)
+        self.btn_start.pack(side=LEFT, padx=(0, 6))
+
+        ttk.Button(frm_btns, text="清空", command=self.clear_all,
+                   bootstyle="light", width=6).pack(side=LEFT, padx=(0, 6))
+        ttk.Button(frm_btns, text="从文件导入", command=self.import_file,
+                   bootstyle="light", width=10).pack(side=LEFT, padx=(0, 6))
+
+        self.lbl_status = ttk.Label(frm_btns, text="就绪", font=("Microsoft YaHei UI", 9),
+                                     bootstyle="secondary")
+        self.lbl_status.pack(side=RIGHT)
+
+        # --- 进度条 ---
+        self.progress = ttk.Progressbar(self, mode="determinate", bootstyle="info-striped")
+        self.progress.pack(fill=X, padx=15, pady=(0, 5))
+
+        # --- 日志区 ---
+        frm_log = ttk.LabelFrame(self, text=" 运行日志")
+        frm_log.pack(fill=X, padx=15, pady=(0, 5))
+
+        self.txt_log = tk.Text(frm_log, height=3, wrap=tk.WORD, state=tk.DISABLED,
+                               font=("Consolas", 9), relief=FLAT, padx=6, pady=4,
+                               bg="#f8f9fa", fg="#495057")
+        self.txt_log.pack(fill=X)
+
+        # --- 结果表格 ---
+        frm_table = ttk.LabelFrame(self, text=" 采集结果")
+        frm_table.pack(fill=BOTH, expand=True, padx=15, pady=(0, 8))
+
+        columns = ("url", "author", "title", "likes", "comments", "collects", "shares")
+        self.tree = ttk.Treeview(frm_table, columns=columns, show="headings", height=8,
+                                  bootstyle="primary")
+
+        headers = {
+            "url": ("链接", 140), "author": ("作者", 90), "title": ("标题", 220),
+            "likes": ("点赞", 80), "comments": ("评论", 80),
+            "collects": ("收藏", 80), "shares": ("转发", 80)
+        }
+        for col, (text, width) in headers.items():
+            self.tree.heading(col, text=text)
+            self.tree.column(col, width=width, minwidth=50, anchor=CENTER if col in
+                            ("likes", "comments", "collects", "shares") else W)
+
+        scroll_y = ttk.Scrollbar(frm_table, orient=VERTICAL, command=self.tree.yview, bootstyle="primary-round")
+        scroll_x = ttk.Scrollbar(frm_table, orient=HORIZONTAL, command=self.tree.xview, bootstyle="primary-round")
+        self.tree.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+        frm_table.grid_rowconfigure(0, weight=1)
+        frm_table.grid_columnconfigure(0, weight=1)
+
+        # --- 底部按钮 ---
+        frm_bottom = ttk.Frame(self, padding=(15, 5, 15, 10))
+        frm_bottom.pack(fill=X)
+
+        ttk.Button(frm_bottom, text="  导出 Excel", command=self.export_excel,
+                   bootstyle="success-outline", width=13).pack(side=LEFT, padx=(0, 8))
+        ttk.Button(frm_bottom, text="  数据分析", command=self.show_analysis,
+                   bootstyle="info-outline", width=13).pack(side=LEFT, padx=(0, 8))
+        ttk.Button(frm_bottom, text="  调试提取", command=self.debug_extract,
+                   bootstyle="warning-outline", width=13).pack(side=LEFT, padx=(0, 8))
+
+        self.lbl_count = ttk.Label(frm_bottom, text="共 0 条数据",
+                                    font=("Microsoft YaHei UI", 9), bootstyle="secondary")
+        self.lbl_count.pack(side=RIGHT)
+
+    # ------ 操作 ------
+
+    def _detect_platform(self, url):
+        if "douyin.com" in url:
+            return "douyin"
+        elif "xiaohongshu.com" in url or "xhslink.com" in url:
+            return "xiaohongshu"
+        return "douyin"
+
+    def start_scrape(self):
+        text = self.txt_input.get("1.0", tk.END).strip()
+        if not text:
+            messagebox.showwarning("提示", "请先输入链接！")
+            return
+
+        urls = [u.strip() for u in text.split("\n") if u.strip()]
+        if not urls:
+            messagebox.showwarning("提示", "没有有效的链接！")
+            return
+
+        platform = self.platform_var.get()
+        if platform == "auto":
+            platform = self._detect_platform(urls[0])
+
+        self.is_running = True
+        self.btn_start.config(state=tk.DISABLED)
+        self.progress["value"] = 0
+        self.progress["maximum"] = len(urls)
+        self.lbl_status.config(text="采集中({})...".format(platform))
+        self._clear_log()
+
+        if platform == "xiaohongshu":
+            self.scraper = XiaohongshuScraper(headless=False)
+        else:
+            self.scraper = DouyinScraper(headless=False)
+        thread = ScraperThread(self.scraper, urls, self.msg_queue, platform)
+        thread.start()
+        self._poll_queue()
+
+    def _poll_queue(self):
+        try:
+            while True:
+                msg = self.msg_queue.get_nowait()
+                if msg["type"] == "result":
+                    self.results.append(msg["data"])
+                    self._add_table_row(msg["data"])
+                elif msg["type"] == "log":
+                    self._append_log(msg["text"])
+                elif msg["type"] == "progress":
+                    self.progress["value"] = msg["current"]
+                    self.lbl_status.config(text="采集中 {}/{}".format(msg["current"], msg["total"]))
+                elif msg["type"] == "done":
+                    self._on_complete()
+                    return
+        except queue.Empty:
+            pass
+        self.after(100, self._poll_queue)
+
+    def _on_complete(self):
+        self.is_running = False
+        self.btn_start.config(state=tk.NORMAL)
+        ok_count = sum(1 for r in self.results if "error" not in r)
+        self.lbl_status.config(text="完成！成功 {} 条".format(ok_count))
+        self.lbl_count.config(text="共 {} 条数据".format(len(self.results)))
+        if self.scraper:
+            self.scraper.close()
+            self.scraper = None
+
+    def clear_all(self):
+        self.txt_input.delete("1.0", tk.END)
+        self.results.clear()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self._clear_log()
+        self.progress["value"] = 0
+        self.lbl_status.config(text="就绪")
+        self.lbl_count.config(text="共 0 条数据")
+
+    def import_file(self):
+        filepath = filedialog.askopenfilename(
+            title="选择链接文件",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        if filepath:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+            self.txt_input.delete("1.0", tk.END)
+            self.txt_input.insert("1.0", content)
+
+    def export_excel(self):
+        if not self.results:
+            messagebox.showwarning("提示", "没有数据可导出！")
+            return
+        filepath = filedialog.asksaveasfilename(
+            title="保存Excel",
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")]
+        )
+        if filepath:
+            analyzer = DataAnalyzer(self.results)
+            analyzer.to_excel(filepath)
+            messagebox.showinfo("完成", "已导出到：\n" + filepath)
+
+    def show_analysis(self):
+        if not self.results:
+            messagebox.showwarning("提示", "没有数据可分析！")
+            return
+        analyzer = DataAnalyzer(self.results)
+        win = ttk.Toplevel(self)
+        win.title("数据分析")
+        win.geometry("1000x700")
+
+        notebook = ttk.Notebook(win, bootstyle="info")
+        notebook.pack(fill=BOTH, expand=True, padx=8, pady=8)
+
+        # --- Tab 1: 文字统计 ---
+        tab_text = ttk.Frame(notebook, padding=5)
+        notebook.add(tab_text, text="  统计摘要  ")
+
+        txt = tk.Text(tab_text, wrap=tk.WORD, font=("Consolas", 10), relief=FLAT, padx=10, pady=10)
+        txt.pack(fill=BOTH, expand=True)
+
+        txt.insert(tk.END, "=" * 50 + "\n")
+        txt.insert(tk.END, "数据统计摘要\n")
+        txt.insert(tk.END, "=" * 50 + "\n\n")
+        txt.insert(tk.END, analyzer.get_summary() + "\n\n")
+
+        txt.insert(tk.END, "=" * 50 + "\n")
+        txt.insert(tk.END, "点赞 Top 10\n")
+        txt.insert(tk.END, "=" * 50 + "\n\n")
+        top = analyzer.get_top("likes", 10)
+        txt.insert(tk.END, top.to_string(index=False) + "\n\n")
+
+        txt.insert(tk.END, "=" * 50 + "\n")
+        txt.insert(tk.END, "评论 Top 10\n")
+        txt.insert(tk.END, "=" * 50 + "\n\n")
+        top_c = analyzer.get_top("comments", 10)
+        txt.insert(tk.END, top_c.to_string(index=False) + "\n")
+        txt.config(state=tk.DISABLED)
+
+        # --- Tab 2: 点赞排行柱状图 ---
+        tab_bar = ttk.Frame(notebook, padding=5)
+        notebook.add(tab_bar, text="  点赞排行  ")
+
+        df_likes = analyzer.get_top("likes", 10)
+        if not df_likes.empty:
+            fig1 = Figure(figsize=(9, 5), dpi=100)
+            ax1 = fig1.add_subplot(111)
+            labels = [str(t)[:15] for t in df_likes["title"].tolist()]
+            values = df_likes["likes"].tolist()
+            colors = plt.cm.Reds([0.3 + 0.7 * i / max(len(values), 1) for i in range(len(values))])
+            bars = ax1.barh(labels[::-1], values[::-1], color=colors[::-1])
+            ax1.set_xlabel("点赞数")
+            ax1.set_title("点赞 Top 10")
+            for bar, val in zip(bars, values[::-1]):
+                ax1.text(bar.get_width() + max(values) * 0.01, bar.get_y() + bar.get_height() / 2,
+                         str(val), va="center", fontsize=9)
+            fig1.tight_layout()
+            canvas1 = FigureCanvasTkAgg(fig1, tab_bar)
+            canvas1.draw()
+            canvas1.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # --- Tab 3: 多维对比图 ---
+        tab_compare = ttk.Frame(notebook, padding=5)
+        notebook.add(tab_compare, text="  多维对比  ")
+
+        df_top = analyzer.get_top("likes", 10)
+        if not df_top.empty:
+            fig2 = Figure(figsize=(9, 5), dpi=100)
+            ax2 = fig2.add_subplot(111)
+            labels2 = [str(t)[:12] for t in df_top["title"].tolist()]
+            x = range(len(labels2))
+            bar_width = 0.2
+            likes_vals = df_top["likes"].tolist()
+            comments_vals = df_top["comments"].tolist() if "comments" in df_top.columns else [0] * len(labels2)
+            collects_vals = df_top["collects"].tolist() if "collects" in df_top.columns else [0] * len(labels2)
+
+            ax2.bar([i - bar_width for i in x], likes_vals, bar_width, label="点赞", color="#e74c3c")
+            ax2.bar(x, comments_vals, bar_width, label="评论", color="#3498db")
+            ax2.bar([i + bar_width for i in x], collects_vals, bar_width, label="收藏", color="#2ecc71")
+            ax2.set_xticks(list(x))
+            ax2.set_xticklabels(labels2, rotation=30, ha="right", fontsize=8)
+            ax2.set_ylabel("数量")
+            ax2.set_title("点赞 / 评论 / 收藏 对比")
+            ax2.legend()
+            fig2.tight_layout()
+            canvas2 = FigureCanvasTkAgg(fig2, tab_compare)
+            canvas2.draw()
+            canvas2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def debug_extract(self):
+        """调试模式：提取第1个链接的所有原始数据并显示"""
+        text = self.txt_input.get("1.0", tk.END).strip()
+        if not text:
+            messagebox.showwarning("提示", "请先输入一个链接！")
+            return
+        url = text.split("\n")[0].strip()
+        if not url:
+            return
+
+        self._append_log("=== 调试提取 ===")
+        self._append_log("URL: " + url)
+
+        scraper = DouyinScraper(headless=False)
+        try:
+            real_url = scraper._extract_url(url)
+            self._append_log("提取的URL: " + real_url)
+            scraper._ensure_driver()
+            real_url = scraper._resolve_url(real_url)
+            self._append_log("跳转后URL: " + real_url)
+            time.sleep(4)
+
+            # 执行JS获取页面信息
+            js_dump = scraper.driver.execute_script("""
+            var result = {};
+
+            // 1. 所有 data-e2e 属性
+            var e2e = {};
+            document.querySelectorAll('[data-e2e]').forEach(function(el) {
+                var key = el.getAttribute('data-e2e');
+                var text = el.textContent.trim().substring(0, 50);
+                if (!e2e[key]) e2e[key] = [];
+                e2e[key].push(text);
+            });
+            result.e2e = e2e;
+
+            // 2. RENDER_DATA
+            var rd = document.getElementById('RENDER_DATA');
+            result.hasRenderData = !!rd;
+            result.renderDataLength = rd ? rd.textContent.length : 0;
+
+            // 3. h1 标签
+            var h1 = document.querySelector('h1');
+            result.h1 = h1 ? h1.textContent.trim().substring(0, 100) : null;
+
+            // 4. 所有包含数字的 span (前30个)
+            var numSpans = [];
+            document.querySelectorAll('span').forEach(function(el) {
+                var t = el.textContent.trim();
+                if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 15) {
+                    var cls = el.className || '';
+                    var parent = el.parentElement;
+                    var parentCls = parent ? (parent.className || '') : '';
+                    var dataE2e = el.getAttribute('data-e2e') || '';
+                    numSpans.push({text: t, class: cls.substring(0,60), parentClass: parentCls.substring(0,60), e2e: dataE2e});
+                }
+            });
+            result.numSpans = numSpans.slice(0, 30);
+
+            // 5. 页面标题
+            result.pageTitle = document.title;
+
+            // 6. 页面URL
+            result.pageUrl = window.location.href;
+
+            return result;
+            """)
+
+            # 显示结果
+            win = ttk.Toplevel(self)
+            win.title("调试信息")
+            win.geometry("700x500")
+            txt = tk.Text(win, wrap=tk.WORD, font=("Consolas", 10), relief=FLAT, padx=10, pady=10)
+            txt.pack(fill=BOTH, expand=True, padx=8, pady=8)
+
+            txt.insert(tk.END, "页面URL: " + str(js_dump.get("pageUrl")) + "\n")
+            txt.insert(tk.END, "页面标题: " + str(js_dump.get("pageTitle")) + "\n")
+            txt.insert(tk.END, "h1标签: " + str(js_dump.get("h1")) + "\n")
+            txt.insert(tk.END, "RENDER_DATA存在: " + str(js_dump.get("hasRenderData")) + "\n")
+            txt.insert(tk.END, "RENDER_DATA长度: " + str(js_dump.get("renderDataLength")) + "\n\n")
+
+            txt.insert(tk.END, "=" * 50 + "\n")
+            txt.insert(tk.END, "data-e2e 属性:\n")
+            txt.insert(tk.END, "=" * 50 + "\n")
+            e2e = js_dump.get("e2e", {})
+            for k, v in e2e.items():
+                txt.insert(tk.END, "  " + k + " -> " + str(v) + "\n")
+
+            txt.insert(tk.END, "\n" + "=" * 50 + "\n")
+            txt.insert(tk.END, "页面上的数字文本:\n")
+            txt.insert(tk.END, "=" * 50 + "\n")
+            for item in js_dump.get("numSpans", []):
+                txt.insert(tk.END, "  text={text} | class={cls} | parent={pcls} | e2e={e2e}\n".format(
+                    text=item.get("text"), cls=item.get("class"),
+                    pcls=item.get("parentClass"), e2e=item.get("e2e")))
+
+            txt.config(state=tk.DISABLED)
+            self._append_log("调试信息已显示")
+
+        except Exception as e:
+            self._append_log("调试失败: " + str(e))
+            import traceback
+            self._append_log(traceback.format_exc())
+        finally:
+            scraper.close()
+
+    # ------ 辅助 ------
+
+    def _add_table_row(self, data):
+        if "error" in data:
+            values = (data.get("url", ""), "ERROR", data["error"], "", "", "", "")
+        else:
+            values = (
+                data.get("url", ""),
+                data.get("author", ""),
+                data.get("title", "")[:50],
+                data.get("likes", 0),
+                data.get("comments", 0),
+                data.get("collects", 0),
+                data.get("shares", 0),
+            )
+        self.tree.insert("", tk.END, values=values)
+
+    def _append_log(self, text):
+        self.txt_log.config(state=tk.NORMAL)
+        self.txt_log.insert(tk.END, text + "\n")
+        self.txt_log.see(tk.END)
+        self.txt_log.config(state=tk.DISABLED)
+
+    def _clear_log(self):
+        self.txt_log.config(state=tk.NORMAL)
+        self.txt_log.delete("1.0", tk.END)
+        self.txt_log.config(state=tk.DISABLED)
+
+
+# =========================================================================
+# 启动
+# =========================================================================
+
+if __name__ == "__main__":
+    app = Application()
+    app.mainloop()

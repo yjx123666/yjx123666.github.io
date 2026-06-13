@@ -5,7 +5,371 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>生活分享 - 伤口.DEV</title>
-<link rel="stylesheet" href="style.css">
+<style>
+/* ========================================
+   生活页面专属样式
+   暖色系日志风格，与冷色主站形成温度对比
+   ======================================== */
+
+/* 页面容器 — 覆盖 style.css 的默认间距 */
+.life-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 70px 20px 60px;
+  position: relative;
+}
+
+/* ---------- 页面顶部日出光晕 ---------- */
+.sunrise-glow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 420px;
+  background: radial-gradient(
+    ellipse 70% 60% at 30% 0%,
+    rgba(255, 159, 67, 0.12) 0%,
+    rgba(225, 112, 85, 0.06) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 暖色发光球体 */
+.warm-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(80px);
+  opacity: 0;
+  animation: warmOrbReveal 1.2s ease forwards, orbFloat 8s ease-in-out infinite;
+}
+.warm-orb:nth-child(2) { animation-delay: 0.3s, 0.3s; }
+.warm-orb:nth-child(3) { animation-delay: 0.6s, 0.6s; }
+
+@keyframes warmOrbReveal {
+  to { opacity: 0.12; }
+}
+
+/* ---------- 页面标题 ---------- */
+.life-page .page-hero {
+  text-align: left;
+  margin-bottom: 64px;
+  padding-top: 50px;
+  position: relative;
+}
+
+.life-page .page-hero::before {
+  content: '///';
+  display: block;
+  font-family: 'Consolas', 'SF Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: rgba(255, 159, 67, 0.35);
+  margin-bottom: 20px;
+}
+
+.life-page .page-hero h1 {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #ff9f43 50%, #e17055 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.life-page .page-hero .subtitle {
+  font-size: 17px;
+  color: #777;
+  line-height: 1.7;
+  max-width: 500px;
+  font-style: italic;
+  position: relative;
+  padding-left: 20px;
+}
+
+.life-page .page-hero .subtitle::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px;
+  width: 3px; height: calc(100% - 8px);
+  background: linear-gradient(to bottom, #ff9f43, #e17055);
+  border-radius: 2px;
+}
+
+/* ---------- 区域标题 ---------- */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 36px;
+  margin-top: 60px;
+}
+
+.section-label:first-of-type {
+  margin-top: 0;
+}
+
+.section-label .label-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.section-label h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e8e8e8;
+  margin: 0;
+}
+
+.section-label .label-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, #2a2030, transparent);
+}
+
+/* ---------- 时间线 ---------- */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin-bottom: 48px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px; top: 8px; bottom: 8px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    #ff9f43, #e17055, #f8b739, #e17055
+  );
+  border-radius: 1px;
+  opacity: 0.5;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -29px; top: 14px;
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: #1a1520;
+  border: 2px solid #ff9f43;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover::before {
+  background: #ff9f43;
+  box-shadow: 0 0 12px rgba(255, 159, 67, 0.5);
+}
+
+.timeline-date {
+  font-family: 'Consolas', 'SF Mono', monospace;
+  font-size: 12px;
+  color: #ff9f43;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.timeline-card {
+  background: rgba(22, 22, 42, 0.6);
+  border: 1px solid #1e1e3a;
+  border-left: 3px solid #ff9f43;
+  border-radius: 2px 10px 10px 2px;
+  padding: 20px 24px;
+  transition: all 0.35s ease;
+}
+
+.timeline-card:hover {
+  background: rgba(26, 21, 32, 0.8);
+  border-color: #2a2030;
+  border-left-color: #ff9f43;
+  transform: translateX(4px);
+  box-shadow: -4px 4px 20px rgba(255, 159, 67, 0.06);
+}
+
+.timeline-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e8e8e8;
+  margin-bottom: 8px;
+}
+
+.timeline-card p {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.timeline-card .card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.timeline-card .card-tag {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: rgba(255, 159, 67, 0.08);
+  color: #ff9f43;
+  border: 1px solid rgba(255, 159, 67, 0.15);
+}
+
+/* ---------- 未来计划 — 暖色块 ---------- */
+.plan-block {
+  background: linear-gradient(135deg, rgba(26, 21, 32, 0.9), rgba(22, 22, 42, 0.7));
+  border: 1px solid #2a2030;
+  border-radius: 12px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-block::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 159, 67, 0.08), transparent);
+  pointer-events: none;
+}
+
+.plan-block h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8b739;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.plan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(15, 15, 26, 0.5);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.plan-item:hover {
+  border-color: rgba(255, 159, 67, 0.15);
+  background: rgba(15, 15, 26, 0.8);
+}
+
+.plan-item .plan-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.plan-item .plan-text {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+/* ---------- 底部引言 ---------- */
+.closing-quote {
+  text-align: center;
+  margin-top: 72px;
+  padding-top: 40px;
+  border-top: 1px solid #1a1520;
+}
+
+.closing-quote p {
+  font-size: 15px;
+  color: #555;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.closing-quote .quote-mark {
+  font-size: 36px;
+  color: #ff9f43;
+  opacity: 0.3;
+  line-height: 1;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* ---------- 滚动淡入 ---------- */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 600px) {
+  .life-page {
+    padding: 70px 16px 40px;
+  }
+
+  .life-page .page-hero h1 {
+    font-size: 34px;
+  }
+
+  .life-page .page-hero .subtitle {
+    font-size: 15px;
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline {
+    padding-left: 28px;
+  }
+
+  .timeline-item::before {
+    left: -25px;
+    width: 8px; height: 8px;
+  }
+
+  .timeline-card {
+    padding: 16px 18px;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -16,6 +380,12 @@
 <div class="meteor" style="left:75%;animation-duration:4.5s;animation-delay:2.2s;"></div>
 <div class="glow-orb" style="width:400px;height:400px;background:#00d2ff;top:10%;left:20%;"></div>
 <div class="glow-orb" style="width:350px;height:350px;background:#7b2ff7;top:60%;right:10%;animation-delay:3s;"></div>
+
+<!-- 生活页面：暖色光晕层 -->
+<div class="sunrise-glow"></div>
+<div class="warm-orb" style="width:300px;height:300px;background:#ff9f43;top:15%;left:15%;"></div>
+<div class="warm-orb" style="width:250px;height:250px;background:#e17055;top:35%;right:10%;animation-delay:0.3s;"></div>
+<div class="warm-orb" style="width:200px;height:200px;background:#f8b739;bottom:20%;left:40%;animation-delay:0.6s;"></div>
 
 <nav>
   <div class="logo" id="logo">伤口.DEV</div>
@@ -33,46 +403,125 @@
   <button onclick="exitEdit()">退出编辑</button>
 </div>
 
-<div class="container">
-  <div class="page-header fade-in">
-    <h1>生活<span>分享</span></h1>
-    <p>生活不止代码，还有那些值得记录的瞬间。</p>
+<div class="life-page">
+
+  <!-- 页面标题 -->
+  <div class="page-hero fade-in">
+    <h1>生活分享</h1>
+    <p class="subtitle">生活不止代码，还有那些值得记录的瞬间。这里是一些碎片，关于学习、关于成长、关于还没到达的地方。</p>
   </div>
 
-  <div class="block fade-in">
+  <!-- 日常随记 -->
+  <div class="section-label fade-in">
+    <div class="label-icon" style="background:rgba(255,159,67,0.1);color:#ff9f43;">✦</div>
     <h2>日常随记</h2>
-    <p>在这里记录生活中的点滴，可以是学习心得、旅行见闻、美食发现，或者任何让你有所感触的事情。</p>
+    <div class="label-line"></div>
   </div>
 
-  <div class="block fade-in">
+  <div class="timeline fade-in">
+    <div class="timeline-item">
+      <div class="timeline-date">2026.06</div>
+      <div class="timeline-card">
+        <h3>毕业季</h3>
+        <p>终于把毕业设计交上去了。答辩的时候讲 GPS 数据分析，老师问了好几个 ARIMA 模型的问题，好在准备充分。四年过得太快了。</p>
+        <div class="card-tags">
+          <span class="card-tag">毕业</span>
+          <span class="card-tag">里程碑</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">2026.05</div>
+      <div class="timeline-card">
+        <h3>深夜调 Bug</h3>
+        <p>GIS 工具的批量转换功能出了个诡异的编码问题，排查到凌晨三点。最后发现是 DWG 文件的中文路径导致的。修完的那一刻，比写出新功能还开心。</p>
+        <div class="card-tags">
+          <span class="card-tag">开发日常</span>
+          <span class="card-tag">Debug</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">2026.04</div>
+      <div class="timeline-card">
+        <h3>开始写个人网站</h3>
+        <p>一直想有个自己的空间，记录做过的项目和想法。用纯 HTML + CSS + JS 从零搭建，没用框架，就是想感受最基础的 Web 开发。每天改一点，慢慢有了样子。</p>
+        <div class="card-tags">
+          <span class="card-tag">Web</span>
+          <span class="card-tag">从零开始</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 学习与成长 -->
+  <div class="section-label fade-in">
+    <div class="label-icon" style="background:rgba(0,210,255,0.1);color:#00d2ff;">◈</div>
     <h2>学习与成长</h2>
-    <ul>
-      <li>在这里分享你的学习经历和成长感悟...</li>
-      <li>比如某本书的读后感、某个课程的总结</li>
-      <li>进入编辑模式后可以直接修改</li>
-    </ul>
+    <div class="label-line"></div>
   </div>
 
-  <div class="block fade-in">
-    <h2>未来计划</h2>
-    <ul>
-      <li>在这里写下你的目标和计划...</li>
-      <li>比如想学的新技能、想去的地方</li>
-      <li>进入编辑模式后可以直接修改</li>
-    </ul>
+  <div class="timeline fade-in">
+    <div class="timeline-item">
+      <div class="timeline-date">持续进行</div>
+      <div class="timeline-card">
+        <h3>Python 自动化之路</h3>
+        <p>从最开始写简单的脚本处理 Excel，到现在能写带 GUI 的桌面应用、做时间序列分析，Python 改变了很多我处理问题的方式。下一个目标是深入学习机器学习。</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">持续进行</div>
+      <div class="timeline-card">
+        <h3>GIS 的魅力</h3>
+        <p>地理信息系统让我看到了数据的另一面——空间维度。把枯燥的坐标变成可视化的地图，发现隐藏在地理位置中的规律，这种感觉很奇妙。</p>
+      </div>
+    </div>
   </div>
+
+  <!-- 未来计划 -->
+  <div class="section-label fade-in">
+    <div class="label-icon" style="background:rgba(248,183,57,0.1);color:#f8b739;">◎</div>
+    <h2>未来计划</h2>
+    <div class="label-line"></div>
+  </div>
+
+  <div class="plan-block fade-in">
+    <h3>✦ 想做的事</h3>
+    <div class="plan-grid">
+      <div class="plan-item">
+        <span class="plan-icon">🗺️</span>
+        <span class="plan-text">深入学习 Web GIS 开发，做一个在线地图可视化项目</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-icon">🤖</span>
+        <span class="plan-text">学习机器学习基础，尝试用模型解决实际的数据分析问题</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-icon">📸</span>
+        <span class="plan-text">培养摄影习惯，记录生活中值得留下的画面</span>
+      </div>
+      <div class="plan-item">
+        <span class="plan-icon">✈️</span>
+        <span class="plan-text">至少去一个没去过的地方旅行，看看不一样的风景</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部引言 -->
+  <div class="closing-quote fade-in">
+    <span class="quote-mark">"</span>
+    <p>把每一天的碎片拼起来，就是属于自己的地图。</p>
+  </div>
+
 </div>
 
 <footer>
   <p>伤口.DEV &copy; 2026</p>
 </footer>
 
-<script src="common.js"></script>
-<script>
-  initParticles(60);
-  initFadeIn();
-  initEditMode();
-  loadEdits();
-</script>
+<script type="module" src="src/pages/main.ts"></script>
 </body>
 </html>
