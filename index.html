@@ -28,10 +28,9 @@
   }
   .hero .avatar {
     width: 120px; height: 120px; border-radius: 50%;
-    background: linear-gradient(135deg, #00d2ff, #7b2ff7);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 48px; color: #fff; margin-bottom: 20px;
+    object-fit: cover; margin-bottom: 20px;
     box-shadow: 0 0 40px rgba(0,210,255,0.3);
+    border: 3px solid #00d2ff;
   }
   .hero h1 { font-size: 42px; margin-bottom: 10px; }
   .hero h1 span { color: #00d2ff; }
@@ -273,7 +272,7 @@
 </div>
 
 <div class="hero" id="home">
-  <div class="avatar">💻</div>
+  <img class="avatar" src="avatar.jpg" alt="头像">
   <h1 id="heroTitle" class="typing-cursor"></h1>
   <p class="fade-in">不写代码的时候在研究地图，不研究地图的时候在写代码。<br>用 Python 让重复的工作自动化，用数据让世界更清晰。</p>
   <div class="tags fade-in">
