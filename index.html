@@ -103,6 +103,46 @@
   /* 粒子背景 */
   #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
+  /* 动态渐变背景 */
+  body::before {
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+    background: linear-gradient(-45deg, #0f0f1a, #1a0a2e, #0a1628, #0f0f1a, #1a0a2e);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* 流星效果 */
+  .meteor {
+    position: fixed; width: 2px; height: 80px;
+    background: linear-gradient(to bottom, rgba(0,210,255,0), rgba(0,210,255,0.6));
+    border-radius: 50%; z-index: -1; pointer-events: none;
+    animation: meteorFall linear infinite;
+    opacity: 0;
+  }
+  @keyframes meteorFall {
+    0% { transform: translateY(-100vh) translateX(0) rotate(45deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(100vh) translateX(-200px) rotate(45deg); opacity: 0; }
+  }
+
+  /* 光晕 */
+  .glow-orb {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: -1;
+    filter: blur(80px); opacity: 0.15;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+  }
+
   /* 头像浮动 */
   @keyframes float {
     0%, 100% { transform: translateY(0); }
@@ -184,6 +224,18 @@
 
 <!-- 粒子背景 -->
 <canvas id="particles"></canvas>
+
+<!-- 流星 -->
+<div class="meteor" style="left:10%;animation-duration:3s;animation-delay:0s;"></div>
+<div class="meteor" style="left:30%;animation-duration:4s;animation-delay:1.5s;"></div>
+<div class="meteor" style="left:55%;animation-duration:3.5s;animation-delay:0.8s;"></div>
+<div class="meteor" style="left:75%;animation-duration:4.5s;animation-delay:2.2s;"></div>
+<div class="meteor" style="left:90%;animation-duration:3.8s;animation-delay:3s;"></div>
+
+<!-- 光晕 -->
+<div class="glow-orb" style="width:400px;height:400px;background:#00d2ff;top:10%;left:20%;"></div>
+<div class="glow-orb" style="width:350px;height:350px;background:#7b2ff7;top:60%;right:10%;animation-delay:3s;"></div>
+<div class="glow-orb" style="width:300px;height:300px;background:#a55eea;bottom:10%;left:40%;animation-delay:5s;"></div>
 
 <!-- 背景音乐 -->
 <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
@@ -286,7 +338,8 @@ document.querySelectorAll('nav a').forEach(a => {
   const canvas = document.getElementById('particles');
   const ctx = canvas.getContext('2d');
   let particles = [];
-  const count = 60;
+  const count = 80;
+  let mouse = { x: -1000, y: -1000 };
 
   function resize() {
     canvas.width = window.innerWidth;
@@ -294,14 +347,16 @@ document.querySelectorAll('nav a').forEach(a => {
   }
   resize();
   window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
   function Particle() {
     this.x = Math.random() * canvas.width;
     this.y = Math.random() * canvas.height;
-    this.vx = (Math.random() - 0.5) * 0.5;
-    this.vy = (Math.random() - 0.5) * 0.5;
-    this.r = Math.random() * 2 + 1;
+    this.vx = (Math.random() - 0.5) * 0.6;
+    this.vy = (Math.random() - 0.5) * 0.6;
+    this.r = Math.random() * 2.5 + 1;
     this.alpha = Math.random() * 0.5 + 0.2;
+    this.color = Math.random() > 0.7 ? '165,94,234' : '0,210,255';
   }
 
   for (let i = 0; i < count; i++) particles.push(new Particle());
@@ -312,9 +367,17 @@ document.querySelectorAll('nav a').forEach(a => {
       p.x += p.vx; p.y += p.vy;
       if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
       if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      // 鼠标吸引
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 200) {
+        p.vx += dx * 0.00005;
+        p.vy += dy * 0.00005;
+      }
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0, 210, 255, ${p.alpha})`;
+      ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
       ctx.fill();
     });
     // 连线
@@ -323,15 +386,31 @@ document.querySelectorAll('nav a').forEach(a => {
         const dx = particles[i].x - particles[j].x;
         const dy = particles[i].y - particles[j].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
+        if (dist < 150) {
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0, 210, 255, ${0.15 * (1 - dist / 120)})`;
+          const alpha = 0.2 * (1 - dist / 150);
+          ctx.strokeStyle = `rgba(${particles[i].color}, ${alpha})`;
+          ctx.lineWidth = 0.8;
           ctx.stroke();
         }
       }
     }
+    // 鼠标连线
+    particles.forEach(p => {
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 200) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.strokeStyle = `rgba(0, 210, 255, ${0.3 * (1 - dist / 200)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    });
     requestAnimationFrame(draw);
   }
   draw();
