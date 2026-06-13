@@ -15,6 +15,7 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
+    justify-content: center;
     padding: 90px 48px 40px;
     overflow: hidden;
   }
@@ -22,7 +23,8 @@
   .hero-content {
     position: relative;
     z-index: 1;
-    max-width: 520px;
+    max-width: 600px;
+    text-align: center;
   }
 
   /* Coordinate marker — map grid reference */
@@ -60,14 +62,13 @@
     color: var(--fog);
     line-height: 1.9;
     margin-bottom: 24px;
-    padding-left: 16px;
-    border-left: 1.5px solid var(--ridge);
   }
 
   .hero .tags {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .hero .tag {
@@ -229,15 +230,8 @@
   }
 
   @media (max-width: 768px) {
-    .hero {
-      flex-direction: column;
-      padding: 100px 24px 40px;
-      text-align: center;
-    }
+    .hero { padding: 100px 24px 40px; }
     .hero-content { max-width: 100%; }
-    .hero-coord { text-align: center; }
-    .hero-description { border-left: none; padding-left: 0; text-align: center; }
-    .hero .tags { justify-content: center; }
     .hero h1 { font-size: 32px; }
   }
 
