@@ -42,7 +42,40 @@
 
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   .typing-cursor::after {
-    content: '|'; color: #00d2ff; animation: blink 1s infinite; margin-left: 2px;
+    content: '|'; color: #00d2ff; animation: blink 0.8s infinite; margin-left: 2px;
+    text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
+  }
+
+  @keyframes typingGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(0,210,255,0.3); }
+    50% { text-shadow: 0 0 20px rgba(0,210,255,0.6), 0 0 40px rgba(0,210,255,0.3); }
+  }
+
+  @keyframes cursorPulse {
+    0%, 100% { opacity: 1; transform: scaleY(1); }
+    50% { opacity: 0.5; transform: scaleY(0.8); }
+  }
+
+  .typing-active {
+    animation: typingGlow 2s ease-in-out infinite;
+  }
+
+  .typing-complete {
+    animation: typingGlow 3s ease-in-out infinite;
+  }
+
+  .hero h1 .char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: charAppear 0.3s ease forwards;
+  }
+
+  @keyframes charAppear {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .card::before {
@@ -194,21 +227,62 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.2 });
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-// ====== 打字效果 ======
+// ====== 优化版打字效果 ======
 (function() {
   const text = '你好，我是 <span style="color:#00d2ff">伤口</span>';
   const el = document.getElementById('heroTitle');
+  const chars = text.split('');
   let i = 0;
-  function type() {
-    if (i <= text.length) {
-      el.innerHTML = text.substring(0, i);
-      i++;
-      setTimeout(type, 80);
+  let isTyping = false;
+
+  function typeNextChar() {
+    if (i < chars.length) {
+      const char = chars[i];
+      if (char === '<') {
+        // 处理 HTML 标签
+        const tagEnd = text.indexOf('>', i);
+        const tag = text.substring(i, tagEnd + 1);
+        el.innerHTML += tag;
+        i = tagEnd + 1;
+      } else if (char === '&') {
+        // 处理 HTML 实体
+        const entityEnd = text.indexOf(';', i);
+        const entity = text.substring(i, entityEnd + 1);
+        el.innerHTML += entity;
+        i = entityEnd + 1;
+      } else {
+        // 普通字符，添加动画
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.style.animationDelay = `${i * 0.05}s`;
+        span.innerHTML = char;
+        el.appendChild(span);
+        i++;
+      }
+
+      // 添加打字中的发光效果
+      el.classList.add('typing-active');
+
+      // 随机打字速度，更自然
+      const speed = 60 + Math.random() * 40;
+      setTimeout(typeNextChar, speed);
     } else {
-      el.classList.remove('typing-cursor');
+      // 打字完成
+      el.classList.remove('typing-cursor', 'typing-active');
+      el.classList.add('typing-complete');
+
+      // 添加完成后的呼吸效果
+      setTimeout(() => {
+        el.style.transition = 'all 0.5s ease';
+      }, 100);
     }
   }
-  setTimeout(type, 500);
+
+  // 开始打字
+  setTimeout(() => {
+    el.classList.add('typing-cursor');
+    typeNextChar();
+  }, 800);
 })();
 
 // ====== 背景音乐 ======
