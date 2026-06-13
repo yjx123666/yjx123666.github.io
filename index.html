@@ -40,7 +40,11 @@
   }
 
 
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
   .typing-cursor::after {
     content: '|'; color: #00d2ff; animation: blink 0.8s infinite; margin-left: 2px;
     text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
@@ -49,11 +53,6 @@
   @keyframes typingGlow {
     0%, 100% { text-shadow: 0 0 10px rgba(0,210,255,0.3); }
     50% { text-shadow: 0 0 20px rgba(0,210,255,0.6), 0 0 40px rgba(0,210,255,0.3); }
-  }
-
-  @keyframes cursorPulse {
-    0%, 100% { opacity: 1; transform: scaleY(1); }
-    50% { opacity: 0.5; transform: scaleY(0.8); }
   }
 
   .typing-active {
@@ -67,21 +66,23 @@
   .hero h1 .char {
     display: inline-block;
     opacity: 0;
-    transform: translateY(10px);
-    animation: charAppear 0.3s ease forwards;
+    transform: translateY(15px) scale(0.8);
+    animation: charAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    will-change: opacity, transform;
   }
 
   @keyframes charAppear {
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 
   .highlight-char {
     color: #00d2ff !important;
     text-shadow: 0 0 15px rgba(0,210,255,0.8), 0 0 30px rgba(0,210,255,0.4);
-    animation: charAppear 0.2s ease forwards, highlightPulse 1.5s ease-in-out infinite 0.3s;
+    animation: charAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               highlightPulse 2s ease-in-out infinite 0.3s;
   }
 
   @keyframes highlightPulse {
@@ -242,77 +243,109 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.2 });
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-// ====== 优化版打字效果 ======
+// ====== 流畅打字效果 ======
 (function() {
   const text = '你好，我是 <span style="color:#00d2ff">伤口</span>';
   const el = document.getElementById('heroTitle');
-  const chars = text.split('');
+  const chars = [];
   let i = 0;
-  let isTyping = false;
 
-  function typeNextChar() {
-    if (i < chars.length) {
-      const char = chars[i];
+  // 预解析文本，分离 HTML 标签和普通字符
+  function parseText() {
+    let inTag = false;
+    let inEntity = false;
+    let current = '';
+
+    for (let j = 0; j < text.length; j++) {
+      const char = text[j];
+
       if (char === '<') {
-        // 处理 HTML 标签
-        const tagEnd = text.indexOf('>', i);
-        const tag = text.substring(i, tagEnd + 1);
-        el.innerHTML += tag;
-        i = tagEnd + 1;
-      } else if (char === '&') {
-        // 处理 HTML 实体
-        const entityEnd = text.indexOf(';', i);
-        const entity = text.substring(i, entityEnd + 1);
-        el.innerHTML += entity;
-        i = entityEnd + 1;
+        if (current) chars.push({ type: 'text', content: current });
+        current = '<';
+        inTag = true;
+      } else if (char === '>') {
+        current += '>';
+        chars.push({ type: 'tag', content: current });
+        current = '';
+        inTag = false;
+      } else if (char === '&' && !inTag) {
+        if (current) chars.push({ type: 'text', content: current });
+        current = '&';
+        inEntity = true;
+      } else if (char === ';' && inEntity) {
+        current += ';';
+        chars.push({ type: 'entity', content: current });
+        current = '';
+        inEntity = false;
+      } else if (inTag || inEntity) {
+        current += char;
       } else {
-        // 普通字符，添加动画
-        const span = document.createElement('span');
-        span.className = 'char';
-        span.style.animationDelay = `${i * 0.05}s`;
-
-        // 检测"伤口"二字，添加特殊效果
-        if (char === '伤' || char === '口') {
-          span.classList.add('highlight-char');
-          span.innerHTML = char;
-          el.appendChild(span);
-          i++;
-
-          // 伤口出现更快，添加发光效果
-          el.classList.add('typing-active');
-          const speed = 30 + Math.random() * 20; // 更快的速度
-          setTimeout(typeNextChar, speed);
-          return;
-        } else {
-          span.innerHTML = char;
-          el.appendChild(span);
-          i++;
-        }
+        current += char;
       }
-
-      // 添加打字中的发光效果
-      el.classList.add('typing-active');
-
-      // 随机打字速度，更自然
-      const speed = 60 + Math.random() * 40;
-      setTimeout(typeNextChar, speed);
-    } else {
-      // 打字完成
-      el.classList.remove('typing-cursor', 'typing-active');
-      el.classList.add('typing-complete');
-
-      // 添加完成后的呼吸效果
-      setTimeout(() => {
-        el.style.transition = 'all 0.5s ease';
-      }, 100);
     }
+    if (current) chars.push({ type: 'text', content: current });
   }
 
-  // 开始打字
-  setTimeout(() => {
-    el.classList.add('typing-cursor');
-    typeNextChar();
-  }, 800);
+  parseText();
+
+  // 创建字符元素
+  function createCharElement(char, index) {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.style.animationDelay = `${index * 0.06}s`;
+
+    if (char === '伤' || char === '口') {
+      span.classList.add('highlight-char');
+    }
+
+    span.textContent = char;
+    return span;
+  }
+
+  // 流畅打字动画
+  function typeText() {
+    el.classList.add('typing-cursor', 'typing-active');
+
+    let charIndex = 0;
+    let currentDelay = 0;
+
+    chars.forEach((item, index) => {
+      if (item.type === 'tag') {
+        // HTML 标签直接插入
+        setTimeout(() => {
+          el.insertAdjacentHTML('beforeend', item.content);
+        }, currentDelay);
+      } else if (item.type === 'entity') {
+        // HTML 实体直接插入
+        setTimeout(() => {
+          el.insertAdjacentHTML('beforeend', item.content);
+        }, currentDelay);
+      } else {
+        // 普通文本逐字显示
+        for (let k = 0; k < item.content.length; k++) {
+          const char = item.content[k];
+          const delay = currentDelay + k * 70; // 每个字符间隔 70ms
+
+          setTimeout(() => {
+            const span = createCharElement(char, charIndex);
+            el.appendChild(span);
+            charIndex++;
+          }, delay);
+        }
+        currentDelay += item.content.length * 70;
+      }
+    });
+
+    // 打字完成
+    const totalDuration = currentDelay + 500;
+    setTimeout(() => {
+      el.classList.remove('typing-cursor', 'typing-active');
+      el.classList.add('typing-complete');
+    }, totalDuration);
+  }
+
+  // 延迟开始
+  setTimeout(typeText, 600);
 })();
 
 // ====== 背景音乐 ======
