@@ -69,8 +69,8 @@ nav {
   background: rgba(12,16,24,0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--ridge);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 48px; height: 64px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 10px 48px 0; height: 64px; gap: 2px;
 }
 
 nav .logo {
