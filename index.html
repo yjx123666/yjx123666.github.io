@@ -12,18 +12,18 @@
     position: fixed; top: 0; width: 100%; z-index: 100;
     background: rgba(15,15,26,0.92); backdrop-filter: blur(10px);
     border-bottom: 1px solid #1e1e3a;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: 56px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 40px; height: 70px;
   }
-  nav .logo { font-size: 20px; font-weight: bold; color: #00d2ff; }
-  nav ul { list-style: none; display: flex; gap: 28px; }
-  nav a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+  nav .logo { font-size: 22px; font-weight: bold; color: #00d2ff; margin-bottom: 4px; }
+  nav ul { list-style: none; display: flex; gap: 36px; }
+  nav a { color: #aaa; text-decoration: none; font-size: 17px; transition: color .2s; }
   nav a:hover { color: #00d2ff; }
 
   .hero {
     min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 80px 20px 40px;
+    text-align: center; padding: 90px 20px 40px;
     background: radial-gradient(ellipse at 50% 30%, #1a1a3e 0%, #0f0f1a 70%);
   }
   .hero .avatar {
@@ -201,7 +201,7 @@
   }
   .edit-hint:hover { border-color: #00d2ff; color: #00d2ff; }
   .admin-bar {
-    position: fixed; top: 56px; left: 0; width: 100%; z-index: 99;
+    position: fixed; top: 70px; left: 0; width: 100%; z-index: 99;
     background: #00d2ff; color: #0f0f1a; padding: 10px 20px;
     font-size: 14px; font-weight: bold; display: none;
     text-align: center;

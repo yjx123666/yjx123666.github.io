@@ -19,13 +19,13 @@
   .glow-orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; filter: blur(80px); opacity: 0.15; animation: orbFloat 8s ease-in-out infinite; }
   @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -30px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
 
-  nav { position: fixed; top: 0; width: 100%; z-index: 100; background: rgba(15,15,26,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #1e1e3a; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 56px; }
-  nav .logo { font-size: 20px; font-weight: bold; color: #00d2ff; }
-  nav ul { list-style: none; display: flex; gap: 28px; }
-  nav a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+  nav { position: fixed; top: 0; width: 100%; z-index: 100; background: rgba(15,15,26,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #1e1e3a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 40px; height: 70px; }
+  nav .logo { font-size: 22px; font-weight: bold; color: #00d2ff; margin-bottom: 4px; }
+  nav ul { list-style: none; display: flex; gap: 36px; }
+  nav a { color: #aaa; text-decoration: none; font-size: 17px; transition: color .2s; }
   nav a:hover, nav a.active { color: #00d2ff; }
 
-  .container { max-width: 900px; margin: 0 auto; padding: 100px 20px 60px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 110px 20px 60px; }
   .page-header { text-align: center; margin-bottom: 50px; }
   .page-header h1 { font-size: 36px; margin-bottom: 12px; }
   .page-header h1 span { color: #00d2ff; }
@@ -40,7 +40,7 @@
   .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
   .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-  .admin-bar { position: fixed; top: 56px; left: 0; width: 100%; z-index: 99; background: #00d2ff; color: #0f0f1a; padding: 10px 20px; font-size: 14px; font-weight: bold; display: none; text-align: center; }
+  .admin-bar { position: fixed; top: 70px; left: 0; width: 100%; z-index: 99; background: #00d2ff; color: #0f0f1a; padding: 10px 20px; font-size: 14px; font-weight: bold; display: none; text-align: center; }
   .admin-bar button { background: #0f0f1a; color: #00d2ff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: 10px; }
   [contenteditable="true"] { outline: 2px dashed #00d2ff55 !important; outline-offset: 4px; cursor: text; }
   [contenteditable="true"]:focus { outline: 2px solid #00d2ff !important; }
