@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生活分享 - 伤口.DEV</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', sans-serif; background: #0f0f1a; color: #e0e0e0; }
+  body::before {
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+    background: linear-gradient(-45deg, #0f0f1a, #1a0a2e, #0a1628, #0f0f1a, #1a0a2e);
+    background-size: 400% 400%; animation: gradientShift 15s ease infinite;
+  }
+  @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  .meteor { position: fixed; width: 2px; height: 80px; background: linear-gradient(to bottom, rgba(0,210,255,0), rgba(0,210,255,0.6)); border-radius: 50%; z-index: -1; pointer-events: none; animation: meteorFall linear infinite; opacity: 0; }
+  @keyframes meteorFall { 0% { transform: translateY(-100vh) translateX(0) rotate(45deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(100vh) translateX(-200px) rotate(45deg); opacity: 0; } }
+  .glow-orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; filter: blur(80px); opacity: 0.15; animation: orbFloat 8s ease-in-out infinite; }
+  @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -30px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+
+  nav { position: fixed; top: 0; width: 100%; z-index: 100; background: rgba(15,15,26,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #1e1e3a; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 56px; }
+  nav .logo { font-size: 20px; font-weight: bold; color: #00d2ff; }
+  nav ul { list-style: none; display: flex; gap: 28px; }
+  nav a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+  nav a:hover, nav a.active { color: #00d2ff; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 100px 20px 60px; }
+  .page-header { text-align: center; margin-bottom: 50px; }
+  .page-header h1 { font-size: 36px; margin-bottom: 12px; }
+  .page-header h1 span { color: #00d2ff; }
+  .page-header p { font-size: 16px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+  .block { background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px; padding: 32px; margin-bottom: 28px; }
+  .block h2 { font-size: 22px; margin-bottom: 18px; color: #00d2ff; border-left: 4px solid #00d2ff; padding-left: 12px; }
+  .block p, .block li { font-size: 15px; color: #aaa; line-height: 1.8; }
+  .block ul { padding-left: 20px; }
+  .block li { margin-bottom: 8px; }
+
+  .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  .admin-bar { position: fixed; top: 56px; left: 0; width: 100%; z-index: 99; background: #00d2ff; color: #0f0f1a; padding: 10px 20px; font-size: 14px; font-weight: bold; display: none; text-align: center; }
+  .admin-bar button { background: #0f0f1a; color: #00d2ff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: 10px; }
+  [contenteditable="true"] { outline: 2px dashed #00d2ff55 !important; outline-offset: 4px; cursor: text; }
+  [contenteditable="true"]:focus { outline: 2px solid #00d2ff !important; }
+
+  footer { text-align: center; padding: 40px 20px; font-size: 13px; color: #444; border-top: 1px solid #1e1e3a; }
+  footer a { color: #00d2ff; text-decoration: none; }
+
+  @media (max-width: 600px) { nav { padding: 0 16px; } nav ul { gap: 14px; } .container { padding: 80px 16px 40px; } }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<div class="meteor" style="left:10%;animation-duration:3s;animation-delay:0s;"></div>
+<div class="meteor" style="left:30%;animation-duration:4s;animation-delay:1.5s;"></div>
+<div class="meteor" style="left:55%;animation-duration:3.5s;animation-delay:0.8s;"></div>
+<div class="meteor" style="left:75%;animation-duration:4.5s;animation-delay:2.2s;"></div>
+<div class="glow-orb" style="width:400px;height:400px;background:#00d2ff;top:10%;left:20%;"></div>
+<div class="glow-orb" style="width:350px;height:350px;background:#7b2ff7;top:60%;right:10%;animation-delay:3s;"></div>
+
+<nav>
+  <div class="logo" id="logo">伤口.DEV</div>
+  <ul>
+    <li><a href="index.html">首页</a></li>
+    <li><a href="software.html">软件开发</a></li>
+    <li><a href="hobby.html">兴趣爱好</a></li>
+    <li><a href="life.html" class="active">生活分享</a></li>
+  </ul>
+</nav>
+
+<div class="admin-bar" id="adminBar">
+  编辑模式已开启 — 点击任意文字即可修改
+  <button onclick="saveEdits()">保存修改</button>
+  <button onclick="exitEdit()">退出编辑</button>
+</div>
+
+<div class="container">
+  <div class="page-header fade-in">
+    <h1>生活<span>分享</span></h1>
+    <p>生活不止代码，还有那些值得记录的瞬间。</p>
+  </div>
+
+  <div class="block fade-in">
+    <h2>日常随记</h2>
+    <p>在这里记录生活中的点滴，可以是学习心得、旅行见闻、美食发现，或者任何让你有所感触的事情。</p>
+  </div>
+
+  <div class="block fade-in">
+    <h2>学习与成长</h2>
+    <ul>
+      <li>在这里分享你的学习经历和成长感悟...</li>
+      <li>比如某本书的读后感、某个课程的总结</li>
+      <li>进入编辑模式后可以直接修改</li>
+    </ul>
+  </div>
+
+  <div class="block fade-in">
+    <h2>未来计划</h2>
+    <ul>
+      <li>在这里写下你的目标和计划...</li>
+      <li>比如想学的新技能、想去的地方</li>
+      <li>进入编辑模式后可以直接修改</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <p>伤口.DEV &copy; 2026</p>
+</footer>
+
+<script>
+// 粒子
+(function(){const c=document.getElementById('particles'),x=c.getContext('2d');let ps=[];const n=60;let m={x:-1e3,y:-1e3};function r(){c.width=innerWidth;c.height=innerHeight}r();onresize=r;onmousemove=e=>{m.x=e.clientX;m.y=e.clientY};function P(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.vx=(Math.random()-.5)*.6;this.vy=(Math.random()-.5)*.6;this.r=Math.random()*2.5+1;this.a=Math.random()*.5+.2;this.clr=Math.random()>.7?'165,94,234':'0,210,255'}for(let i=0;i<n;i++)ps.push(new P);(function d(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>c.width)p.vx*=-1;if(p.y<0||p.y>c.height)p.vy*=-1;const dx=m.x-p.x,dy=m.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<200){p.vx+=dx*.00005;p.vy+=dy*.00005}x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(${p.clr},${p.a})`;x.fill()});for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){x.beginPath();x.moveTo(ps[i].x,ps[i].y);x.lineTo(ps[j].x,ps[j].y);x.strokeStyle=`rgba(${ps[i].clru},${.2*(1-dist/150)})`;x.lineWidth=.8;x.stroke()}}ps.forEach(p=>{const dx=m.x-p.x,dy=m.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<200){x.beginPath();x.moveTo(p.x,p.y);x.lineTo(m.x,m.y);x.strokeStyle=`rgba(0,210,255,${.3*(1-dist/200)})`;x.lineWidth=1;x.stroke()}});requestAnimationFrame(d)})()})();
+
+// 滚动淡入
+document.querySelectorAll('.fade-in').forEach(el=>new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.2}).observe(el));
+
+// 编辑模式
+const ADMIN_PWD='ssbuxi2026';const GH_TOKEN=atob('Z2hwXzFYVHpQc0V2eGtBbDFxckZ3bkRlNGh5UkVkNEt1djE1WTZlSQ==');const GH_OWNER='yjx123666';const GH_REPO='yjx123666.github.io';let clickCount=0;let clickTimer=null;
+document.getElementById('logo').addEventListener('click',()=>{clickCount++;clearTimeout(clickTimer);clickTimer=setTimeout(()=>{clickCount=0},2000);if(clickCount>=5){clickCount=0;showLogin()}});
+function showLogin(){const pwd=prompt('输入管理员密码：');if(pwd===ADMIN_PWD)enableEditMode();else if(pwd)alert('密码错误')}
+function enableEditMode(){document.getElementById('adminBar').style.display='block';const editables=['.page-header h1','.page-header p','.block h2','.block p','.block li'];editables.forEach(sel=>{document.querySelectorAll(sel).forEach(el=>{el.contentEditable='true'})})}
+function saveEdits(){const data={};document.querySelectorAll('[contenteditable="true"]').forEach((el,i)=>{data['e_'+i]=el.innerHTML});localStorage.setItem('sw_edits_'+location.pathname,JSON.stringify(data));syncToGitHub()}
+function loadEdits(){const s=localStorage.getItem('sw_edits_'+location.pathname);if(!s)return;try{const d=JSON.parse(s);document.querySelectorAll('[contenteditable="true"]').forEach((el,i)=>{if(d['e_'+i]!==undefined)el.innerHTML=d['e_'+i]})}catch(e){}}
+function exitEdit(){document.getElementById('adminBar').style.display='none';document.querySelectorAll('[contenteditable]').forEach(el=>{el.contentEditable='false'})}
+async function syncToGitHub(){const bar=document.getElementById('adminBar');bar.innerHTML='正在同步... <button onclick="exitEdit()">退出</button>';try{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));let html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;const u=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${location.pathname.split('/').pop()}`;const r=await fetch(u,{headers:{'Authorization':'token '+GH_TOKEN}});const d=await r.json();const resp=await fetch(u,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({message:'更新 '+location.pathname.split('/').pop(),content:btoa(unescape(encodeURIComponent(html))),sha:d.sha})});if(resp.ok){localStorage.removeItem('sw_edits_'+location.pathname);bar.innerHTML='同步成功！ <button onclick="location.reload()">刷新</button> <button onclick="exitEdit()">退出</button>'}else throw new Error('失败')}catch(e){bar.innerHTML='同步失败: '+e.message+' <button onclick="syncToGitHub()">重试</button> <button onclick="exitEdit()">退出</button>';enableEditMode()}}
+loadEdits();
+</script>
+</body>
+</html>
