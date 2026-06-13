@@ -3,23 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学习成果展示</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>伤口.DEV - 个人主页</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Microsoft YaHei', sans-serif; background: #0f0f1a; color: #e0e0e0; }
-
-  nav {
-    position: fixed; top: 0; width: 100%; z-index: 100;
-    background: rgba(15,15,26,0.92); backdrop-filter: blur(10px);
-    border-bottom: 1px solid #1e1e3a;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0 40px; height: 70px;
-  }
-  nav .logo { font-size: 22px; font-weight: bold; color: #00d2ff; margin-bottom: 4px; }
-  nav ul { list-style: none; display: flex; gap: 36px; }
-  nav a { color: #aaa; text-decoration: none; font-size: 17px; transition: color .2s; }
-  nav a:hover { color: #00d2ff; }
-
   .hero {
     min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -31,7 +18,9 @@
     object-fit: cover; margin-bottom: 20px;
     box-shadow: 0 0 40px rgba(0,210,255,0.3);
     border: 3px solid #00d2ff;
+    animation: float 3s ease-in-out infinite;
   }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
   .hero h1 { font-size: 42px; margin-bottom: 10px; }
   .hero h1 span { color: #00d2ff; }
   .hero p { font-size: 18px; color: #888; max-width: 600px; line-height: 1.7; }
@@ -43,37 +32,12 @@
 
   section { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
   section h2 {
-    font-size: 30px; text-align: center; margin-bottom: 50px;
-    position: relative;
+    font-size: 30px; text-align: center; margin-bottom: 50px; position: relative;
   }
   section h2::after {
     content: ''; display: block; width: 50px; height: 3px;
     background: #00d2ff; margin: 12px auto 0; border-radius: 2px;
   }
-
-  .gallery {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-  }
-  .card {
-    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
-    overflow: hidden; transition: transform .3s, box-shadow .3s;
-    cursor: pointer; text-decoration: none; color: inherit; display: block;
-  }
-  .card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px #00d2ff22; }
-  .card-img {
-    height: 180px; display: flex; align-items: center; justify-content: center;
-    font-size: 48px; color: #fff;
-  }
-  .card-body { padding: 20px; }
-  .card-body h3 { font-size: 18px; margin-bottom: 8px; }
-  .card-body p { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 12px; }
-  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .card-tags span {
-    padding: 3px 10px; border-radius: 12px; font-size: 11px;
-    background: #00d2ff15; color: #00d2ff; border: 1px solid #00d2ff33;
-  }
-  .card-date { font-size: 12px; color: #555; margin-top: 10px; }
 
   .stats {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -86,83 +50,11 @@
   .stat-box .num { font-size: 36px; font-weight: bold; color: #00d2ff; }
   .stat-box .label { font-size: 14px; color: #888; margin-top: 6px; }
 
-  footer {
-    text-align: center; padding: 40px 20px; font-size: 13px; color: #444;
-    border-top: 1px solid #1e1e3a;
-  }
-
-  @media (max-width: 600px) {
-    nav { padding: 0 16px; }
-    nav ul { gap: 14px; }
-    section { padding: 50px 16px; }
-    .hero h1 { font-size: 28px; }
-  }
-
-  /* ====== 动画样式 ====== */
-  /* 粒子背景 */
-  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-
-  /* 动态渐变背景 */
-  body::before {
-    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-    background: linear-gradient(-45deg, #0f0f1a, #1a0a2e, #0a1628, #0f0f1a, #1a0a2e);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  /* 流星效果 */
-  .meteor {
-    position: fixed; width: 2px; height: 80px;
-    background: linear-gradient(to bottom, rgba(0,210,255,0), rgba(0,210,255,0.6));
-    border-radius: 50%; z-index: -1; pointer-events: none;
-    animation: meteorFall linear infinite;
-    opacity: 0;
-  }
-  @keyframes meteorFall {
-    0% { transform: translateY(-100vh) translateX(0) rotate(45deg); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(100vh) translateX(-200px) rotate(45deg); opacity: 0; }
-  }
-
-  /* 光晕 */
-  .glow-orb {
-    position: fixed; border-radius: 50%; pointer-events: none; z-index: -1;
-    filter: blur(80px); opacity: 0.15;
-    animation: orbFloat 8s ease-in-out infinite;
-  }
-  @keyframes orbFloat {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -30px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-  }
-
-  /* 头像浮动 */
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-  .avatar { animation: float 3s ease-in-out infinite; }
-
-  /* 滚动淡入 */
-  .fade-in {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-  }
-  .fade-in.visible { opacity: 1; transform: translateY(0); }
-
-  /* 标题打字光标 */
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   .typing-cursor::after {
     content: '|'; color: #00d2ff; animation: blink 1s infinite; margin-left: 2px;
   }
 
-  /* 卡片光晕 */
   .card::before {
     content: ''; position: absolute; top: -50%; left: -50%;
     width: 200%; height: 200%;
@@ -172,10 +64,6 @@
   .card { position: relative; }
   .card:hover::before { opacity: 1; }
 
-  /* 数字计数动画 */
-  .stat-box .num { transition: all 0.3s; }
-
-  /* 背景音乐按钮 */
   .music-btn {
     position: fixed; bottom: 20px; left: 20px; z-index: 999;
     width: 44px; height: 44px; border-radius: 50%;
@@ -191,7 +79,6 @@
     50% { box-shadow: 0 0 0 10px #00d2ff00; }
   }
 
-  /* 编辑模式样式 */
   .edit-hint {
     position: fixed; bottom: 20px; right: 20px; z-index: 999;
     background: #16162a; border: 1px solid #1e1e3a; border-radius: 10px;
@@ -199,44 +86,25 @@
     transition: all .3s; display: none;
   }
   .edit-hint:hover { border-color: #00d2ff; color: #00d2ff; }
-  .admin-bar {
-    position: fixed; top: 70px; left: 0; width: 100%; z-index: 99;
-    background: #00d2ff; color: #0f0f1a; padding: 10px 20px;
-    font-size: 14px; font-weight: bold; display: none;
-    text-align: center;
-  }
-  .admin-bar button {
-    background: #0f0f1a; color: #00d2ff; border: none; padding: 6px 16px;
-    border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: 10px;
-  }
-  [contenteditable="true"] {
-    outline: 2px dashed #00d2ff55 !important;
-    outline-offset: 4px;
-    cursor: text;
-  }
-  [contenteditable="true"]:focus {
-    outline: 2px solid #00d2ff !important;
+
+  @media (max-width: 600px) {
+    section { padding: 50px 16px; }
+    .hero h1 { font-size: 28px; }
   }
 </style>
 </head>
 <body>
 
-<!-- 粒子背景 -->
 <canvas id="particles"></canvas>
-
-<!-- 流星 -->
 <div class="meteor" style="left:10%;animation-duration:3s;animation-delay:0s;"></div>
 <div class="meteor" style="left:30%;animation-duration:4s;animation-delay:1.5s;"></div>
 <div class="meteor" style="left:55%;animation-duration:3.5s;animation-delay:0.8s;"></div>
 <div class="meteor" style="left:75%;animation-duration:4.5s;animation-delay:2.2s;"></div>
 <div class="meteor" style="left:90%;animation-duration:3.8s;animation-delay:3s;"></div>
-
-<!-- 光晕 -->
 <div class="glow-orb" style="width:400px;height:400px;background:#00d2ff;top:10%;left:20%;"></div>
 <div class="glow-orb" style="width:350px;height:350px;background:#7b2ff7;top:60%;right:10%;animation-delay:3s;"></div>
 <div class="glow-orb" style="width:300px;height:300px;background:#a55eea;bottom:10%;left:40%;animation-delay:5s;"></div>
 
-<!-- 背景音乐 -->
 <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
 <audio id="bgMusic" loop preload="auto">
   <source src="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mpeg">
@@ -260,8 +128,7 @@
 
 <div class="edit-hint" id="editHint">点击此处编辑页面</div>
 
-<!-- 登录弹窗 -->
-<div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:none;align-items:center;justify-content:center;">
+<div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#16162a;border:1px solid #1e1e3a;border-radius:14px;padding:32px;width:320px;text-align:center;">
     <h3 style="margin-bottom:16px;color:#00d2ff;">管理员登录</h3>
     <input type="password" id="pwdInput" placeholder="输入密码" style="width:100%;padding:10px;border-radius:8px;border:1px solid #1e1e3a;background:#0f0f1a;color:#e0e0e0;font-size:14px;margin-bottom:16px;outline:none;">
@@ -296,7 +163,6 @@
 <section id="portfolio" class="fade-in">
   <h2>作品展示</h2>
   <div class="gallery">
-
     <a href="gps-detail.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#0099cc)">📡</div>
       <div class="card-body">
@@ -306,7 +172,6 @@
         <div class="card-date">2026 年 6 月 · 毕业设计</div>
       </div>
     </a>
-
     <a href="GIS工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#3742fa)">🗺️</div>
       <div class="card-body">
@@ -316,7 +181,6 @@
         <div class="card-date">2026 年 6 月</div>
       </div>
     </a>
-
     <a href="新媒体工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#a55eea,#8854d0)">📊</div>
       <div class="card-body">
@@ -326,7 +190,6 @@
         <div class="card-date">2026 年 6 月</div>
       </div>
     </a>
-
   </div>
 </section>
 
@@ -334,98 +197,30 @@
   <p>伤口.DEV &copy; 2026 &nbsp;|&nbsp; 用 ❤️ 制作</p>
 </footer>
 
+<script src="common.js"></script>
 <script>
-// 平滑滚动
-document.querySelectorAll('nav a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
-  });
-});
+// ====== 粒子和淡入 ======
+initParticles(80);
 
-// ====== 粒子背景 ======
-(function() {
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let particles = [];
-  const count = 80;
-  let mouse = { x: -1000, y: -1000 };
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-
-  function Particle() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.vx = (Math.random() - 0.5) * 0.6;
-    this.vy = (Math.random() - 0.5) * 0.6;
-    this.r = Math.random() * 2.5 + 1;
-    this.alpha = Math.random() * 0.5 + 0.2;
-    this.color = Math.random() > 0.7 ? '165,94,234' : '0,210,255';
-  }
-
-  for (let i = 0; i < count; i++) particles.push(new Particle());
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      // 鼠标吸引
-      const dx = mouse.x - p.x;
-      const dy = mouse.y - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 200) {
-        p.vx += dx * 0.00005;
-        p.vy += dy * 0.00005;
-      }
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
-      ctx.fill();
-    });
-    // 连线
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 150) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          const alpha = 0.2 * (1 - dist / 150);
-          ctx.strokeStyle = `rgba(${particles[i].color}, ${alpha})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
+// 增强版淡入（带数字计数动画）
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      entry.target.querySelectorAll('.num[data-target]').forEach(num => {
+        const target = parseInt(num.dataset.target);
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 50));
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) { current = target; clearInterval(timer); }
+          num.textContent = current + (target >= 100 ? '+' : '');
+        }, 30);
+      });
     }
-    // 鼠标连线
-    particles.forEach(p => {
-      const dx = mouse.x - p.x;
-      const dy = mouse.y - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 200) {
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(mouse.x, mouse.y);
-        ctx.strokeStyle = `rgba(0, 210, 255, ${0.3 * (1 - dist / 200)})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
+  });
+}, { threshold: 0.2 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
 // ====== 打字效果 ======
 (function() {
@@ -444,28 +239,6 @@ document.querySelectorAll('nav a[href^="#"]').forEach(a => {
   setTimeout(type, 500);
 })();
 
-// ====== 滚动淡入 ======
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      // 数字计数动画
-      entry.target.querySelectorAll('.num[data-target]').forEach(num => {
-        const target = parseInt(num.dataset.target);
-        let current = 0;
-        const step = Math.max(1, Math.floor(target / 50));
-        const timer = setInterval(() => {
-          current += step;
-          if (current >= target) { current = target; clearInterval(timer); }
-          num.textContent = current + (target >= 100 ? '+' : '');
-        }, 30);
-      });
-    }
-  });
-}, { threshold: 0.2 });
-
-document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
 // ====== 背景音乐 ======
 let musicPlaying = false;
 function toggleMusic() {
@@ -483,7 +256,6 @@ function toggleMusic() {
   musicPlaying = !musicPlaying;
 }
 
-// 用户首次点击时尝试播放音乐
 document.addEventListener('click', function firstClick() {
   const audio = document.getElementById('bgMusic');
   audio.volume = 0.3;
@@ -495,33 +267,10 @@ document.addEventListener('click', function firstClick() {
   document.removeEventListener('click', firstClick);
 }, { once: true });
 
-// ====== 编辑模式 ======
-const ADMIN_PWD = 'ssbuxi2026';
-const GH_TOKEN = atob('Z2hwXzFYVHpQc0V2eGtBbDFxckZ3bkRlNGh5UkVkNEt1djE1WTZlSQ==');
-const GH_OWNER = 'yjx123666';
-const GH_REPO = 'yjx123666.github.io';
-const GH_FILE = 'index.html';
-let clickCount = 0;
-let clickTimer = null;
+// ====== 编辑模式（增强版：弹窗登录 + 清理 DOM 后同步） ======
 let editMode = false;
 
-// 点击 logo 5 次触发登录
-document.getElementById('logo').addEventListener('click', () => {
-  clickCount++;
-  clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
-  if (clickCount >= 5) {
-    clickCount = 0;
-    showLogin();
-  }
-});
-
-// 也显示底部编辑提示（通过 URL 参数触发）
-if (location.hash === '#edit') {
-  document.getElementById('editHint').style.display = 'block';
-  document.getElementById('editHint').onclick = showLogin;
-}
-
+// 覆盖 common.js 的 showLogin 为弹窗版
 function showLogin() {
   document.getElementById('loginModal').style.display = 'flex';
   document.getElementById('pwdInput').focus();
@@ -541,6 +290,7 @@ function tryLogin() {
   }
 }
 
+// 增强版编辑模式（覆盖 common.js 的版本）
 function enableEditMode() {
   editMode = true;
   document.getElementById('adminBar').style.display = 'block';
@@ -552,34 +302,26 @@ function enableEditMode() {
     'footer p'
   ];
   editables.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.contentEditable = 'true';
-    });
+    document.querySelectorAll(sel).forEach(el => { el.contentEditable = 'true'; });
   });
-  loadEdits();
 }
 
 function saveEdits() {
-  // 先保存到本地（即时预览）
   const data = {};
   document.querySelectorAll('[contenteditable="true"]').forEach((el, i) => {
     data['edit_' + i] = el.innerHTML;
   });
-  localStorage.setItem('portfolio_edits', JSON.stringify(data));
-
-  // 同步到 GitHub
+  localStorage.setItem('sw_edits_' + location.pathname, JSON.stringify(data));
   syncToGitHub();
 }
 
-function loadEdits() {
-  const saved = localStorage.getItem('portfolio_edits');
+function loadEditsIndex() {
+  const saved = localStorage.getItem('sw_edits_' + location.pathname);
   if (!saved) return;
   try {
     const data = JSON.parse(saved);
     document.querySelectorAll('[contenteditable="true"]').forEach((el, i) => {
-      if (data['edit_' + i] !== undefined) {
-        el.innerHTML = data['edit_' + i];
-      }
+      if (data['edit_' + i] !== undefined) el.innerHTML = data['edit_' + i];
     });
   } catch(e) {}
 }
@@ -592,67 +334,49 @@ function exitEdit() {
   });
 }
 
-// ====== GitHub 同步 ======
+// 增强版同步（清理编辑 DOM 后再推送）
 async function syncToGitHub() {
   const statusEl = document.getElementById('adminBar');
   statusEl.innerHTML = '正在同步到 GitHub... <button onclick="exitEdit()">退出编辑</button>';
-
   try {
-    // 1. 先取消所有编辑状态，获取纯净 HTML
-    document.querySelectorAll('[contenteditable]').forEach(el => {
-      el.removeAttribute('contenteditable');
-    });
-
-    // 2. 获取当前完整 HTML
+    document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
     let html = document.documentElement.outerHTML;
-
-    // 3. 移除编辑模式相关的 DOM（adminBar、loginModal、editHint）
     const tempDoc = new DOMParser().parseFromString(html, 'text/html');
-    const removeIds = ['adminBar', 'loginModal', 'editHint'];
-    removeIds.forEach(id => {
+    ['adminBar', 'loginModal', 'editHint'].forEach(id => {
       const el = tempDoc.getElementById(id);
       if (el) el.remove();
     });
     html = '<!DOCTYPE html>\n' + tempDoc.documentElement.outerHTML;
-
-    // 4. 获取当前文件的 SHA
-    const getUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-    const getResp = await fetch(getUrl, {
-      headers: { 'Authorization': 'token ' + GH_TOKEN }
-    });
-    const fileData = await getResp.json();
-    const sha = fileData.sha;
-
-    // 5. 推送到 GitHub
-    const putResp = await fetch(getUrl, {
+    const u = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${location.pathname.split('/').pop()}`;
+    const r = await fetch(u, { headers: { 'Authorization': 'token ' + GH_TOKEN } });
+    const d = await r.json();
+    const resp = await fetch(u, {
       method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + GH_TOKEN,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: '通过网页编辑器更新内容',
+        message: '更新 ' + location.pathname.split('/').pop(),
         content: btoa(unescape(encodeURIComponent(html))),
-        sha: sha
+        sha: d.sha
       })
     });
-
-    if (putResp.ok) {
-      localStorage.removeItem('portfolio_edits');
-      statusEl.innerHTML = '同步成功！所有访客都能看到更新了。 <button onclick="location.reload()">刷新查看</button> <button onclick="exitEdit()">退出编辑</button>';
-    } else {
-      const err = await putResp.json();
-      throw new Error(err.message || '推送失败');
-    }
+    if (resp.ok) {
+      localStorage.removeItem('sw_edits_' + location.pathname);
+      statusEl.innerHTML = '同步成功！ <button onclick="location.reload()">刷新</button> <button onclick="exitEdit()">退出</button>';
+    } else throw new Error('失败');
   } catch(e) {
-    statusEl.innerHTML = '同步失败: ' + e.message + ' <button onclick="syncToGitHub()">重试</button> <button onclick="exitEdit()">退出编辑</button>';
-    // 恢复编辑状态
+    statusEl.innerHTML = '同步失败: ' + e.message + ' <button onclick="syncToGitHub()">重试</button> <button onclick="exitEdit()">退出</button>';
     enableEditMode();
   }
 }
 
-// 页面加载时恢复内容
-loadEdits();
+// 初始化
+initEditMode();
+loadEditsIndex();
+
+if (location.hash === '#edit') {
+  document.getElementById('editHint').style.display = 'block';
+  document.getElementById('editHint').onclick = showLogin;
+}
 </script>
 </body>
 </html>
