@@ -118,6 +118,79 @@
     50% { box-shadow: 0 0 0 10px #00d2ff00; }
   }
 
+  .music-panel {
+    position: fixed; bottom: 80px; left: 20px; z-index: 998;
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
+    padding: 20px; width: 320px; display: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .music-panel.show { display: block; animation: slideUp 0.3s ease; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .music-panel h3 {
+    color: #00d2ff; font-size: 16px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .music-panel .music-option {
+    margin-bottom: 12px; padding: 10px; background: #0f0f1a;
+    border-radius: 8px; border: 1px solid #1e1e3a;
+  }
+  .music-panel .music-option label {
+    display: block; color: #888; font-size: 12px; margin-bottom: 6px;
+  }
+  .music-panel input[type="text"],
+  .music-panel input[type="file"] {
+    width: 100%; padding: 8px 12px; background: #16162a;
+    border: 1px solid #1e1e3a; border-radius: 6px;
+    color: #e0e0e0; font-size: 13px; outline: none;
+  }
+  .music-panel input[type="text"]:focus {
+    border-color: #00d2ff;
+  }
+  .music-panel .btn-row {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .music-panel .btn {
+    flex: 1; padding: 8px; border: none; border-radius: 6px;
+    font-size: 13px; cursor: pointer; transition: all .2s;
+  }
+  .music-panel .btn-primary {
+    background: #00d2ff; color: #0f0f1a; font-weight: bold;
+  }
+  .music-panel .btn-primary:hover {
+    background: #00e5ff; box-shadow: 0 4px 15px #00d2ff44;
+  }
+  .music-panel .btn-secondary {
+    background: #1e1e3a; color: #888;
+  }
+  .music-panel .btn-secondary:hover {
+    background: #2a2a4a; color: #aaa;
+  }
+  .music-panel .music-list {
+    margin-top: 12px; max-height: 150px; overflow-y: auto;
+  }
+  .music-panel .music-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; background: #0f0f1a; border-radius: 6px;
+    margin-bottom: 6px; border: 1px solid #1e1e3a;
+  }
+  .music-panel .music-item.active {
+    border-color: #00d2ff; background: #00d2ff11;
+  }
+  .music-panel .music-item-name {
+    font-size: 13px; color: #e0e0e0; flex: 1; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .music-panel .music-item-btn {
+    background: none; border: none; color: #888; cursor: pointer;
+    font-size: 16px; padding: 0 4px;
+  }
+  .music-panel .music-item-btn:hover { color: #00d2ff; }
+  .music-panel .music-item-btn.delete { color: #ff6b6b; }
+  .music-panel .music-item-btn.delete:hover { color: #ff4444; }
+
   .edit-hint {
     position: fixed; bottom: 20px; right: 20px; z-index: 999;
     background: #16162a; border: 1px solid #1e1e3a; border-radius: 10px;
@@ -145,6 +218,31 @@
 <div class="glow-orb" style="width:300px;height:300px;background:#a55eea;bottom:10%;left:40%;animation-delay:5s;"></div>
 
 <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
+<button class="music-btn" id="musicSettingsBtn" onclick="toggleMusicPanel()" title="音乐设置" style="bottom: 70px; left: 20px; font-size: 14px;">⚙</button>
+
+<div class="music-panel" id="musicPanel">
+  <h3>🎵 背景音乐设置</h3>
+
+  <div class="music-option">
+    <label>添加在线音乐（输入链接）</label>
+    <input type="text" id="musicUrlInput" placeholder="输入音乐链接，如 https://example.com/music.mp3">
+  </div>
+
+  <div class="music-option">
+    <label>或上传本地音乐文件</label>
+    <input type="file" id="musicFileInput" accept="audio/*">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="addMusic()">添加</button>
+    <button class="btn btn-secondary" onclick="toggleMusicPanel()">关闭</button>
+  </div>
+
+  <div class="music-list" id="musicList">
+    <!-- 音乐列表将通过 JavaScript 动态生成 -->
+  </div>
+</div>
+
 <audio id="bgMusic" loop preload="auto">
   <source src="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mpeg">
 </audio>
@@ -375,6 +473,175 @@ document.addEventListener('click', function firstClick() {
   }).catch(() => {});
   document.removeEventListener('click', firstClick);
 }, { once: true });
+
+// ====== 音乐选择面板 ======
+let musicPanelOpen = false;
+const musicList = JSON.parse(localStorage.getItem('musicList') || '[]');
+let currentMusicIndex = parseInt(localStorage.getItem('currentMusicIndex') || '0');
+
+// 初始化音乐列表
+function initMusicList() {
+  // 如果列表为空，添加默认音乐
+  if (musicList.length === 0) {
+    musicList.push({
+      name: '默认音乐',
+      url: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3',
+      type: 'url'
+    });
+    saveMusicList();
+  }
+  renderMusicList();
+}
+
+// 保存音乐列表到 localStorage
+function saveMusicList() {
+  localStorage.setItem('musicList', JSON.stringify(musicList));
+  localStorage.setItem('currentMusicIndex', currentMusicIndex.toString());
+}
+
+// 渲染音乐列表
+function renderMusicList() {
+  const container = document.getElementById('musicList');
+  container.innerHTML = '';
+
+  musicList.forEach((music, index) => {
+    const item = document.createElement('div');
+    item.className = `music-item ${index === currentMusicIndex ? 'active' : ''}`;
+
+    const name = document.createElement('span');
+    name.className = 'music-item-name';
+    name.textContent = music.name;
+    name.title = music.name;
+
+    const playBtn = document.createElement('button');
+    playBtn.className = 'music-item-btn';
+    playBtn.textContent = index === currentMusicIndex ? '⏸' : '▶';
+    playBtn.onclick = () => playMusic(index);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'music-item-btn delete';
+    deleteBtn.textContent = '×';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      deleteMusic(index);
+    };
+
+    item.appendChild(name);
+    item.appendChild(playBtn);
+    item.appendChild(deleteBtn);
+    container.appendChild(item);
+  });
+}
+
+// 切换音乐面板显示
+function toggleMusicPanel() {
+  musicPanelOpen = !musicPanelOpen;
+  const panel = document.getElementById('musicPanel');
+  if (musicPanelOpen) {
+    panel.classList.add('show');
+  } else {
+    panel.classList.remove('show');
+  }
+}
+
+// 添加音乐
+function addMusic() {
+  const urlInput = document.getElementById('musicUrlInput');
+  const fileInput = document.getElementById('musicFileInput');
+
+  const url = urlInput.value.trim();
+  const file = fileInput.files[0];
+
+  if (url) {
+    // 添加在线音乐
+    const name = extractMusicName(url);
+    musicList.push({ name, url, type: 'url' });
+    urlInput.value = '';
+  } else if (file) {
+    // 添加本地音乐文件
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const name = file.name.replace(/\.[^/.]+$/, '');
+      musicList.push({ name, url: e.target.result, type: 'file' });
+      saveMusicList();
+      renderMusicList();
+      fileInput.value = '';
+    };
+    reader.readAsDataURL(file);
+    return;
+  } else {
+    alert('请输入音乐链接或选择文件');
+    return;
+  }
+
+  saveMusicList();
+  renderMusicList();
+}
+
+// 从 URL 提取音乐名称
+function extractMusicName(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const filename = pathname.split('/').pop();
+    return filename.replace(/\.[^/.]+$/, '') || '未知音乐';
+  } catch {
+    return '未知音乐';
+  }
+}
+
+// 播放音乐
+function playMusic(index) {
+  if (index === currentMusicIndex && musicPlaying) {
+    // 暂停当前音乐
+    toggleMusic();
+    return;
+  }
+
+  currentMusicIndex = index;
+  const music = musicList[index];
+  const audio = document.getElementById('bgMusic');
+
+  // 更新音频源
+  audio.src = music.url;
+  audio.load();
+
+  // 播放
+  audio.play().then(() => {
+    musicPlaying = true;
+    document.getElementById('musicBtn').classList.add('playing');
+    document.getElementById('musicBtn').textContent = '♫';
+    saveMusicList();
+    renderMusicList();
+  }).catch(err => {
+    console.error('播放失败:', err);
+    alert('播放失败，请检查音乐链接是否有效');
+  });
+}
+
+// 删除音乐
+function deleteMusic(index) {
+  if (musicList.length <= 1) {
+    alert('至少保留一首音乐');
+    return;
+  }
+
+  musicList.splice(index, 1);
+
+  // 调整当前播放索引
+  if (index === currentMusicIndex) {
+    currentMusicIndex = 0;
+    playMusic(0);
+  } else if (index < currentMusicIndex) {
+    currentMusicIndex--;
+  }
+
+  saveMusicList();
+  renderMusicList();
+}
+
+// 初始化
+initMusicList();
 
 // ====== 编辑模式（增强版：弹窗登录 + 清理 DOM 后同步） ======
 let editMode = false;
