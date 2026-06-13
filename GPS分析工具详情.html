@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS位移数据分析与预测系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', sans-serif; background: #0f0f1a; color: #e0e0e0; }
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(15,15,26,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #1e1e3a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 40px; height: 70px;
+  }
+  nav .logo { font-size: 22px; font-weight: bold; color: #00d2ff; margin-bottom: 4px; }
+  nav ul { list-style: none; display: flex; gap: 36px; }
+  nav a { color: #aaa; text-decoration: none; font-size: 17px; transition: color .2s; }
+  nav a:hover { color: #00d2ff; }
+  .container { max-width: 900px; margin: 0 auto; padding: 110px 20px 60px; }
+  .page-header { text-align: center; margin-bottom: 50px; }
+  .page-header .icon { font-size: 64px; margin-bottom: 16px; }
+  .page-header h1 { font-size: 36px; margin-bottom: 12px; }
+  .page-header h1 span { color: #00d2ff; }
+  .page-header p { font-size: 16px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+  .page-header .tags { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .page-header .tag {
+    padding: 5px 16px; border-radius: 20px; font-size: 13px;
+    border: 1px solid #00d2ff44; color: #00d2ff; background: #00d2ff11;
+  }
+  .block {
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
+    padding: 32px; margin-bottom: 28px;
+  }
+  .block h2 {
+    font-size: 22px; margin-bottom: 18px; color: #00d2ff;
+    border-left: 4px solid #00d2ff; padding-left: 12px;
+  }
+  .block p, .block li { font-size: 15px; color: #aaa; line-height: 1.8; }
+  .block ul { padding-left: 20px; }
+  .block li { margin-bottom: 8px; }
+  .screenshot-placeholder {
+    width: 100%; min-height: 300px; background: #1a1a3e; border: 2px dashed #2a2a4a;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #444; font-size: 16px; margin: 16px 0;
+  }
+  .code-block {
+    background: #0d0d1a; border: 1px solid #1e1e3a; border-radius: 8px;
+    padding: 20px; font-family: 'Consolas', monospace; font-size: 14px;
+    color: #8be9fd; overflow-x: auto; margin: 16px 0; white-space: pre-wrap;
+  }
+  .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .info-table th, .info-table td {
+    padding: 12px 16px; text-align: left; border-bottom: 1px solid #1e1e3a; font-size: 14px;
+  }
+  .info-table th { color: #00d2ff; width: 140px; }
+  .highlight { color: #00d2ff; font-weight: bold; }
+  footer {
+    text-align: center; padding: 40px 20px; font-size: 13px; color: #444;
+    border-top: 1px solid #1e1e3a;
+  }
+  footer a { color: #00d2ff; text-decoration: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">GPS位移数据分析与预测系统</div>
+  <ul>
+    <li><a href="index.html">首页</a></li>
+    <li><a href="software.html" style="color:#00d2ff;">软件开发</a></li>
+    <li><a href="hobby.html">兴趣爱好</a></li>
+    <li><a href="life.html">生活分享</a></li>
+  </ul>
+</nav>
+<div class="container">
+  <div class="page-header">
+    <div class="icon">📡</div>
+    <h1>GPS位移数据<span>分析与预测系统</span></h1>
+    <p>基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用，毕业设计项目。</p>
+    <div class="tags">
+      <span class="tag">Python</span><span class="tag">ARIMA</span><span class="tag">tkinter</span>
+      <span class="tag">pandas</span><span class="tag">statsmodels</span><span class="tag">matplotlib</span>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>项目背景</h2>
+    <p>GPS 坐标时间序列分析是大地测量和形变监测领域的重要技术。通过分析 GPS 连续观测站的位移数据，可以监测地壳运动、地面沉降、建筑物变形等现象。本项目开发了一套完整的 GPS 位移数据处理与分析系统，实现从原始数据到预测结果的全流程自动化分析。</p>
+  </div>
+
+  <div class="block">
+    <h2>功能特点</h2>
+    <ul>
+      <li><span class="highlight">数据加载</span> — 支持 SOPAC 格式和内华达 24/25 列格式的 GPS TXT 数据文件</li>
+      <li><span class="highlight">格式转换</span> — 一键将 TXT 数据转换为 CSV 格式，方便后续处理</li>
+      <li><span class="highlight">数据预处理</span> — 异常值检测（IQR 方法 / 3σ 准则）、缺失值处理（删除 / 插值）、数据平滑</li>
+      <li><span class="highlight">平稳性检验</span> — ADF 检验 + KPSS 检验双重验证，自动推荐 ARIMA 差分阶数</li>
+      <li><span class="highlight">ARIMA 分析</span> — 支持自动选参（pmdarima）和手动设置，单分量或 NEU 三方向联合分析</li>
+      <li><span class="highlight">模型诊断</span> — 残差 QQ 图、ACF/PACF 图、Ljung-Box 检验、Shapiro-Wilk 正态性检验</li>
+      <li><span class="highlight">精度验证</span> — 滚动预测验证法，计算 MAE、RMSE、MAPE、R² 等精度指标</li>
+      <li><span class="highlight">可视化</span> — 预测结果图、3D 位移散点图、线性趋势拟合图、模型诊断图</li>
+      <li><span class="highlight">数据导出</span> — 支持导出预测数据、预处理数据、图表（PNG/PDF/SVG）</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>系统架构</h2>
+    <p>系统采用模块化设计，主要包含以下核心模块：</p>
+    <table class="info-table">
+      <tr><th>主程序</th><td>main_app.py — GUI 主界面，包含 5 个功能选项卡</td></tr>
+      <tr><th>数据输入</th><td>data_input.py — GPS 数据文件解析模块，支持多种格式</td></tr>
+      <tr><th>ARIMA 分析</th><td>arima_analysis.py — ARIMA 时间序列分析核心算法</td></tr>
+      <tr><th>精度验证</th><td>accuracy_validation.py — 独立的精度验证与评估模块</td></tr>
+    </table>
+  </div>
+
+  <div class="block">
+    <h2>技术细节</h2>
+    <table class="info-table">
+      <tr><th>开发语言</th><td>Python 3</td></tr>
+      <tr><th>GUI 框架</th><td>tkinter + ttk</td></tr>
+      <tr><th>时间序列</th><td>statsmodels (ARIMA, ADF, KPSS)</td></tr>
+      <tr><th>自动选参</th><td>pmdarima (auto_arima)</td></tr>
+      <tr><th>数据处理</th><td>pandas + numpy</td></tr>
+      <tr><th>机器学习</th><td>scikit-learn (线性回归、精度指标)</td></tr>
+      <tr><th>可视化</th><td>matplotlib (内嵌 tkinter)</td></tr>
+      <tr><th>统计检验</th><td>scipy (Shapiro-Wilk 正态性检验)</td></tr>
+    </table>
+  </div>
+
+  <div class="block">
+    <h2>分析流程</h2>
+    <ul>
+      <li><span class="highlight">第一步：加载数据</span> — 选择 GPS TXT 文件，系统自动解析 SOPAC 格式，提取日期和三维位移坐标（北向 N、东向 E、垂直向 U）</li>
+      <li><span class="highlight">第二步：格式转换</span> — 将 TXT 文件转换为 CSV 格式，便于后续预处理和分析</li>
+      <li><span class="highlight">第三步：数据预处理</span> — 对数据进行异常值检测与处理、缺失值填补、平滑降噪，并进行平稳性检验</li>
+      <li><span class="highlight">第四步：ARIMA 分析</span> — 使用 ARIMA 模型对位移时间序列进行建模和预测，支持自动选择最优参数</li>
+      <li><span class="highlight">第五步：结果可视化</span> — 展示预测结果、精度验证对比图、3D 散点图、线性趋势等多种图表</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>精度验证方法</h2>
+    <p>采用<span class="highlight">滚动预测验证法</span>，将数据集最后 15 天作为验证集：</p>
+    <ul>
+      <li>使用前 N-15 天数据训练 ARIMA 模型</li>
+      <li>逐天滚动预测，每步将真实值加入历史数据更新模型</li>
+      <li>计算 MAE（平均绝对误差）、RMSE（均方根误差）、MAPE（平均绝对百分比误差）、R²（决定系数）</li>
+      <li>绘制预测值 vs 真实值对比图，直观展示预测精度</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>界面截图</h2>
+    <div class="screenshot-placeholder">
+      <!-- 替换为实际截图：<img src="截图文件名.png" style="width:100%"> -->
+      在此放置截图
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>核心代码片段</h2>
+    <p>ARIMA 自动选参与预测：</p>
+    <div class="code-block">
+# 自动选择最优 ARIMA 参数
+from pmdarima import auto_arima
+auto_model = auto_arima(train_series,
+                       seasonal=False,
+                       d=None,
+                       max_p=5, max_q=5,
+                       max_d=2,
+                       trace=True,
+                       error_action='ignore',
+                       suppress_warnings=True,
+                       stepwise=False)
+p, d, q = auto_model.order
+
+# 拟合模型并预测
+from statsmodels.tsa.arima.model import ARIMA
+model = ARIMA(train_series, order=(p, d, q))
+fitted = model.fit()
+forecast = fitted.forecast(steps=30)
+conf_int = fitted.get_forecast(steps=30).conf_int()
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>项目成果</h2>
+    <ul>
+      <li>完成 GPS 坐标时间序列从数据采集到预测分析的全流程工具开发</li>
+      <li>实现 ARIMA 模型自动选参，降低使用门槛</li>
+      <li>采用滚动预测验证法，确保模型预测精度可靠</li>
+      <li>提供丰富的可视化图表，直观展示分析结果</li>
+      <li>系统操作简便，适合非专业用户使用</li>
+    </ul>
+  </div>
+</div>
+<footer>
+  <p>GPS位移数据分析与预测系统 &copy; 2026 &nbsp;|&nbsp; <a href="software.html">返回软件开发</a></p>
+</footer>
+</body>
+</html>
