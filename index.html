@@ -99,6 +99,59 @@
     .hero h1 { font-size: 28px; }
   }
 
+  /* ====== 动画样式 ====== */
+  /* 粒子背景 */
+  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+  /* 头像浮动 */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .avatar { animation: float 3s ease-in-out infinite; }
+
+  /* 滚动淡入 */
+  .fade-in {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* 标题打字光标 */
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .typing-cursor::after {
+    content: '|'; color: #00d2ff; animation: blink 1s infinite; margin-left: 2px;
+  }
+
+  /* 卡片光晕 */
+  .card::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0,210,255,0.1) 0%, transparent 70%);
+    opacity: 0; transition: opacity .5s; pointer-events: none;
+  }
+  .card { position: relative; }
+  .card:hover::before { opacity: 1; }
+
+  /* 数字计数动画 */
+  .stat-box .num { transition: all 0.3s; }
+
+  /* 背景音乐按钮 */
+  .music-btn {
+    position: fixed; bottom: 20px; left: 20px; z-index: 999;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #16162a; border: 1px solid #1e1e3a;
+    color: #00d2ff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .3s;
+  }
+  .music-btn:hover { border-color: #00d2ff; box-shadow: 0 0 20px #00d2ff33; }
+  .music-btn.playing { animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 #00d2ff44; }
+    50% { box-shadow: 0 0 0 10px #00d2ff00; }
+  }
+
   /* 编辑模式样式 */
   .edit-hint {
     position: fixed; bottom: 20px; right: 20px; z-index: 999;
@@ -129,6 +182,15 @@
 </head>
 <body>
 
+<!-- 粒子背景 -->
+<canvas id="particles"></canvas>
+
+<!-- 背景音乐 -->
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
+<audio id="bgMusic" loop preload="auto">
+  <source src="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mpeg">
+</audio>
+
 <nav>
   <div class="logo" id="logo">My Portfolio</div>
   <ul>
@@ -158,9 +220,9 @@
 
 <div class="hero" id="home">
   <div class="avatar">💻</div>
-  <h1>你好，我是 <span>伤口</span></h1>
-  <p>这里是一段个人简介。你可以介绍自己的学习方向、兴趣爱好和目标。用两三句话让别人快速了解你。</p>
-  <div class="tags">
+  <h1 id="heroTitle" class="typing-cursor"></h1>
+  <p class="fade-in">这里是一段个人简介。你可以介绍自己的学习方向、兴趣爱好和目标。用两三句话让别人快速了解你。</p>
+  <div class="tags fade-in">
     <span class="tag">Web 开发</span>
     <span class="tag">Python</span>
     <span class="tag">GIS 地理信息</span>
@@ -170,15 +232,15 @@
 </div>
 
 <section>
-  <div class="stats">
-    <div class="stat-box"><div class="num">2</div><div class="label">完成项目</div></div>
-    <div class="stat-box"><div class="num">6</div><div class="label">掌握技能</div></div>
-    <div class="stat-box"><div class="num">3</div><div class="label">技术领域</div></div>
-    <div class="stat-box"><div class="num">500+</div><div class="label">学习小时</div></div>
+  <div class="stats fade-in">
+    <div class="stat-box"><div class="num" data-target="2">0</div><div class="label">完成项目</div></div>
+    <div class="stat-box"><div class="num" data-target="6">0</div><div class="label">掌握技能</div></div>
+    <div class="stat-box"><div class="num" data-target="3">0</div><div class="label">技术领域</div></div>
+    <div class="stat-box"><div class="num" data-target="500">0</div><div class="label">学习小时</div></div>
   </div>
 </section>
 
-<section id="portfolio">
+<section id="portfolio" class="fade-in">
   <h2>作品展示</h2>
   <div class="gallery">
 
@@ -218,6 +280,130 @@ document.querySelectorAll('nav a').forEach(a => {
     if (target) target.scrollIntoView({ behavior: 'smooth' });
   });
 });
+
+// ====== 粒子背景 ======
+(function() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const count = 60;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.r = Math.random() * 2 + 1;
+    this.alpha = Math.random() * 0.5 + 0.2;
+  }
+
+  for (let i = 0; i < count; i++) particles.push(new Particle());
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 210, 255, ${p.alpha})`;
+      ctx.fill();
+    });
+    // 连线
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0, 210, 255, ${0.15 * (1 - dist / 120)})`;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ====== 打字效果 ======
+(function() {
+  const text = '你好，我是 <span style="color:#00d2ff">伤口</span>';
+  const el = document.getElementById('heroTitle');
+  let i = 0;
+  function type() {
+    if (i <= text.length) {
+      el.innerHTML = text.substring(0, i);
+      i++;
+      setTimeout(type, 80);
+    } else {
+      el.classList.remove('typing-cursor');
+    }
+  }
+  setTimeout(type, 500);
+})();
+
+// ====== 滚动淡入 ======
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      // 数字计数动画
+      entry.target.querySelectorAll('.num[data-target]').forEach(num => {
+        const target = parseInt(num.dataset.target);
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 50));
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) { current = target; clearInterval(timer); }
+          num.textContent = current + (target >= 100 ? '+' : '');
+        }, 30);
+      });
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ====== 背景音乐 ======
+let musicPlaying = false;
+function toggleMusic() {
+  const audio = document.getElementById('bgMusic');
+  const btn = document.getElementById('musicBtn');
+  if (musicPlaying) {
+    audio.pause();
+    btn.classList.remove('playing');
+    btn.textContent = '♪';
+  } else {
+    audio.play().catch(() => {});
+    btn.classList.add('playing');
+    btn.textContent = '♫';
+  }
+  musicPlaying = !musicPlaying;
+}
+
+// 用户首次点击时尝试播放音乐
+document.addEventListener('click', function firstClick() {
+  const audio = document.getElementById('bgMusic');
+  audio.volume = 0.3;
+  audio.play().then(() => {
+    musicPlaying = true;
+    document.getElementById('musicBtn').classList.add('playing');
+    document.getElementById('musicBtn').textContent = '♫';
+  }).catch(() => {});
+  document.removeEventListener('click', firstClick);
+}, { once: true });
 
 // ====== 编辑模式 ======
 const ADMIN_PWD = 'ssbuxi2026';
