@@ -327,7 +327,7 @@
 
 <script>
 // 平滑滚动
-document.querySelectorAll('nav a').forEach(a => {
+document.querySelectorAll('nav a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
     const target = document.querySelector(a.getAttribute('href'));
