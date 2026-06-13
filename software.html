@@ -28,11 +28,26 @@
   nav a { color: #aaa; text-decoration: none; font-size: 17px; transition: color .2s; }
   nav a:hover, nav a.active { color: #00d2ff; }
 
-  .container { max-width: 900px; margin: 0 auto; padding: 110px 20px 60px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 110px 20px 60px; }
   .page-header { text-align: center; margin-bottom: 50px; }
   .page-header h1 { font-size: 36px; margin-bottom: 12px; }
   .page-header h1 span { color: #00d2ff; }
   .page-header p { font-size: 16px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; margin-bottom: 40px; }
+  .card {
+    background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px;
+    overflow: hidden; transition: transform .3s, box-shadow .3s;
+    cursor: pointer; text-decoration: none; color: inherit; display: block;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px #00d2ff22; }
+  .card-img { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #fff; }
+  .card-body { padding: 20px; }
+  .card-body h3 { font-size: 18px; margin-bottom: 8px; }
+  .card-body p { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 12px; }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card-tags span { padding: 3px 10px; border-radius: 12px; font-size: 11px; background: #00d2ff15; color: #00d2ff; border: 1px solid #00d2ff33; }
+  .card-date { font-size: 12px; color: #555; margin-top: 10px; }
 
   .block { background: #16162a; border: 1px solid #1e1e3a; border-radius: 14px; padding: 32px; margin-bottom: 28px; }
   .block h2 { font-size: 22px; margin-bottom: 18px; color: #00d2ff; border-left: 4px solid #00d2ff; padding-left: 12px; }
@@ -86,6 +101,38 @@
     <p>记录我的编程之路，分享项目经验和技术心得。</p>
   </div>
 
+  <div class="gallery fade-in">
+    <a href="gps-detail.html" class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#0099cc)">📡</div>
+      <div class="card-body">
+        <h3>GPS 位移数据分析与预测系统</h3>
+        <p>毕业设计项目。基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用，支持数据预处理、自动选参、模型诊断和精度验证。</p>
+        <div class="card-tags"><span>Python</span><span>ARIMA</span><span>tkinter</span><span>statsmodels</span></div>
+        <div class="card-date">2026 年 6 月 · 毕业设计</div>
+      </div>
+    </a>
+
+    <a href="GIS工具详情.html" class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#00d2ff,#3742fa)">🗺️</div>
+      <div class="card-body">
+        <h3>GIS 批量格式转换工具</h3>
+        <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。纯 Python 2.7 编写，无需额外依赖。</p>
+        <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
+        <div class="card-date">2026 年 6 月</div>
+      </div>
+    </a>
+
+    <a href="新媒体工具详情.html" class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#a55eea,#8854d0)">📊</div>
+      <div class="card-body">
+        <h3>新媒体数据采集与分析工具</h3>
+        <p>带 GUI 界面的桌面应用，批量提取抖音/小红书分享链接中的标题、点赞、评论、收藏等数据，支持导出 Excel 和可视化图表分析。</p>
+        <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>matplotlib</span></div>
+        <div class="card-date">2026 年 6 月</div>
+      </div>
+    </a>
+  </div>
+
   <div class="block fade-in">
     <h2>技术栈</h2>
     <ul>
@@ -94,35 +141,6 @@
       <li>ArcGIS — 地理信息系统、空间数据分析</li>
       <li>Selenium — 浏览器自动化、数据采集</li>
     </ul>
-  </div>
-
-  <div class="block fade-in">
-    <h2>项目经验</h2>
-    <ul>
-      <li><a href="gps-detail.html" style="color:#00d2ff;text-decoration:none;">GPS 位移数据分析与预测系统 — 毕业设计</a></li>
-      <li><a href="GIS工具详情.html" style="color:#00d2ff;text-decoration:none;">GIS 批量格式转换工具 — ArcGIS Python Toolbox</a></li>
-      <li><a href="新媒体工具详情.html" style="color:#00d2ff;text-decoration:none;">新媒体数据采集与分析工具 — Python 桌面应用</a></li>
-    </ul>
-  </div>
-
-  <div class="block fade-in">
-    <h2>毕业设计：GPS 位移数据分析与预测系统</h2>
-    <p>基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用。系统支持从原始 GPS 数据加载、格式转换、数据预处理、平稳性检验、ARIMA 建模预测到结果可视化的全流程分析。</p>
-    <ul>
-      <li>数据加载：支持 SOPAC 格式和内华达 24/25 列格式的 GPS TXT 数据</li>
-      <li>数据预处理：异常值检测（IQR / 3σ）、缺失值处理、数据平滑</li>
-      <li>平稳性检验：ADF + KPSS 双重验证，自动推荐差分阶数</li>
-      <li>ARIMA 分析：自动选参（pmdarima）或手动设置，支持 NEU 三方向联合分析</li>
-      <li>模型诊断：残差 QQ 图、ACF/PACF 图、Ljung-Box 检验</li>
-      <li>精度验证：滚动预测验证法，计算 MAE、RMSE、MAPE、R²</li>
-      <li>可视化：预测结果图、3D 位移散点图、线性趋势拟合图</li>
-    </ul>
-    <p style="margin-top:12px;"><a href="gps-detail.html" style="color:#00d2ff;text-decoration:none;">查看详细介绍 →</a></p>
-  </div>
-
-  <div class="block fade-in">
-    <h2>学习笔记</h2>
-    <p>在这里写你的学习笔记、技术总结、踩坑记录等。进入编辑模式后可以直接修改。</p>
   </div>
 </div>
 
@@ -135,19 +153,17 @@
 (function(){const c=document.getElementById('particles'),x=c.getContext('2d');let ps=[];const n=60;let m={x:-1e3,y:-1e3};function r(){c.width=innerWidth;c.height=innerHeight}r();onresize=r;onmousemove=e=>{m.x=e.clientX;m.y=e.clientY};function P(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.vx=(Math.random()-.5)*.6;this.vy=(Math.random()-.5)*.6;this.r=Math.random()*2.5+1;this.a=Math.random()*.5+.2;this.clr=Math.random()>.7?'165,94,234':'0,210,255'}for(let i=0;i<n;i++)ps.push(new P);(function d(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>c.width)p.vx*=-1;if(p.y<0||p.y>c.height)p.vy*=-1;const dx=m.x-p.x,dy=m.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<200){p.vx+=dx*.00005;p.vy+=dy*.00005}x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(${p.clr},${p.a})`;x.fill()});for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){x.beginPath();x.moveTo(ps[i].x,ps[i].y);x.lineTo(ps[j].x,ps[j].y);x.strokeStyle=`rgba(${ps[i].clru},${.2*(1-dist/150)})`;x.lineWidth=.8;x.stroke()}}ps.forEach(p=>{const dx=m.x-p.x,dy=m.y-p.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<200){x.beginPath();x.moveTo(p.x,p.y);x.lineTo(m.x,m.y);x.strokeStyle=`rgba(0,210,255,${.3*(1-dist/200)})`;x.lineWidth=1;x.stroke()}});requestAnimationFrame(d)})()})();
 
 // 滚动淡入
-new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.2}).observe(document.querySelectorAll('.fade-in'));
 document.querySelectorAll('.fade-in').forEach(el=>new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.2}).observe(el));
 
 // 编辑模式
 const ADMIN_PWD='ssbuxi2026';const GH_TOKEN=atob('Z2hwXzFYVHpQc0V2eGtBbDFxckZ3bkRlNGh5UkVkNEt1djE1WTZlSQ==');const GH_OWNER='yjx123666';const GH_REPO='yjx123666.github.io';let clickCount=0;let clickTimer=null;
 document.getElementById('logo').addEventListener('click',()=>{clickCount++;clearTimeout(clickTimer);clickTimer=setTimeout(()=>{clickCount=0},2000);if(clickCount>=5){clickCount=0;showLogin()}});
 function showLogin(){const pwd=prompt('输入管理员密码：');if(pwd===ADMIN_PWD)enableEditMode();else if(pwd)alert('密码错误')}
-function enableEditMode(){document.getElementById('adminBar').style.display='block';const editables=['.page-header h1','.page-header p','.block h2','.block p','.block li'];editables.forEach(sel=>{document.querySelectorAll(sel).forEach(el=>{el.contentEditable='true'})})}
+function enableEditMode(){document.getElementById('adminBar').style.display='block';const editables=['.page-header h1','.page-header p','.block h2','.block p','.block li','.card-body h3','.card-body p'];editables.forEach(sel=>{document.querySelectorAll(sel).forEach(el=>{el.contentEditable='true'})})}
 function saveEdits(){const data={};document.querySelectorAll('[contenteditable="true"]').forEach((el,i)=>{data['e_'+i]=el.innerHTML});localStorage.setItem('sw_edits_'+location.pathname,JSON.stringify(data));syncToGitHub()}
 function loadEdits(){const s=localStorage.getItem('sw_edits_'+location.pathname);if(!s)return;try{const d=JSON.parse(s);document.querySelectorAll('[contenteditable="true"]').forEach((el,i)=>{if(d['e_'+i]!==undefined)el.innerHTML=d['e_'+i]})}catch(e){}}
 function exitEdit(){document.getElementById('adminBar').style.display='none';document.querySelectorAll('[contenteditable]').forEach(el=>{el.contentEditable='false'})}
 async function syncToGitHub(){const bar=document.getElementById('adminBar');bar.innerHTML='正在同步... <button onclick="exitEdit()">退出</button>';try{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));let html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;const u=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${location.pathname.split('/').pop()}`;const r=await fetch(u,{headers:{'Authorization':'token '+GH_TOKEN}});const d=await r.json();const resp=await fetch(u,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({message:'更新 '+location.pathname.split('/').pop(),content:btoa(unescape(encodeURIComponent(html))),sha:d.sha})});if(resp.ok){localStorage.removeItem('sw_edits_'+location.pathname);bar.innerHTML='同步成功！ <button onclick="location.reload()">刷新</button> <button onclick="exitEdit()">退出</button>'}else throw new Error('失败')}catch(e){bar.innerHTML='同步失败: '+e.message+' <button onclick="syncToGitHub()">重试</button> <button onclick="exitEdit()">退出</button>';enableEditMode()}}
-localStorage.removeItem('sw_edits_'+location.pathname);
 loadEdits();
 </script>
 </body>
