@@ -980,7 +980,7 @@ class Application(ttk.Window):
         self.lbl_account_info.pack(fill=X)
 
         # 分析结果
-        paned = ttk.PanedWindow(parent, orient=HORIZONTAL)
+        paned = ttk.Panedwindow(parent, orient=HORIZONTAL)
         paned.pack(fill=BOTH, expand=True, padx=8, pady=(0, 6))
 
         # 左侧：作品列表
