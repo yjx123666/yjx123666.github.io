@@ -1520,13 +1520,16 @@ class Application(ttk.Window):
     def _run_account_analysis(self, url, max_scroll):
         try:
             self.account_scraper.msg_queue = self.msg_queue
+            self.msg_queue.put({"type": "account_log", "text": "正在启动浏览器..."})
             account_info, videos = self.account_scraper.analyze(url, max_scroll)
             self.msg_queue.put({"type": "account_info", "data": account_info})
             for v in videos:
                 self.msg_queue.put({"type": "account_video", "data": v})
             self.msg_queue.put({"type": "account_done"})
         except Exception as e:
-            self.msg_queue.put({"type": "account_error", "text": str(e)})
+            import traceback
+            detail = traceback.format_exc()
+            self.msg_queue.put({"type": "account_error", "text": f"{e}\n\n{detail}"})
 
     def _poll_account_queue(self):
         try:
