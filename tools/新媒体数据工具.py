@@ -826,7 +826,21 @@ class AccountScraper:
 
             // 方案2: 从 DOM 提取（兜底）
             if (videos.length === 0) {
-                // 查找所有视频卡片链接
+                // 数字解析函数（处理"万"、"亿"等中文后缀）
+                function parseNum(text) {
+                    if (!text) return 0;
+                    text = text.trim().replace(/,/g, '');
+                    var multipliers = {'w': 10000, 'W': 10000, '万': 10000, '亿': 100000000};
+                    for (var suffix in multipliers) {
+                        if (text.endsWith(suffix)) {
+                            var n = parseFloat(text.slice(0, -1));
+                            return isNaN(n) ? 0 : Math.round(n * multipliers[suffix]);
+                        }
+                    }
+                    var n2 = parseFloat(text);
+                    return isNaN(n2) ? 0 : Math.round(n2);
+                }
+
                 var links = document.querySelectorAll('a[href*="/video/"], a[href*="/note/"]');
                 var seen = new Set();
                 links.forEach(function(a) {
@@ -834,14 +848,13 @@ class AccountScraper:
                     if (seen.has(href)) return;
                     seen.add(href);
 
-                    // 找到包含这个链接的卡片容器
-                    var card = a.closest('[class*="item"], [class*="card"], li, [class*="Cell"]') || a;
-                    var titleEl = card.querySelector('[class*="title"], [class*="desc"], p, span');
+                    var card = a.closest('li') || a.closest('[class*="item"]') || a;
+                    var titleEl = card.querySelector('p span') || card.querySelector('p') || card.querySelector('[class*="title"]');
                     var numEls = card.querySelectorAll('span');
                     var nums = [];
                     numEls.forEach(function(el) {
                         var t = el.textContent.trim();
-                        if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 10) {
+                        if (/^[\\d.]+[万亿wW]?,?[\\d.]*$/.test(t) && t.length < 12) {
                             nums.push(t);
                         }
                     });
@@ -849,10 +862,11 @@ class AccountScraper:
                     videos.push({
                         title: titleEl ? titleEl.textContent.trim().substring(0, 100) : '',
                         url: href,
-                        likes: nums[0] ? parseInt(nums[0].replace(/[^\\d.]/g, '')) || 0 : 0,
-                        comments: nums[1] ? parseInt(nums[1].replace(/[^\\d.]/g, '')) || 0 : 0,
-                        collects: nums[2] ? parseInt(nums[2].replace(/[^\\d.]/g, '')) || 0 : 0,
-                        shares: 0, views: 0
+                        likes: parseNum(nums[0]),
+                        comments: parseNum(nums[1]),
+                        collects: parseNum(nums[2]),
+                        shares: parseNum(nums[3]) || 0,
+                        views: 0
                     });
                 });
             }
