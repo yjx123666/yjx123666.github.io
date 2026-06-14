@@ -562,6 +562,172 @@ class XiaohongshuScraper:
 
 
 # =========================================================================
+# 账号分析引擎
+# =========================================================================
+
+class AccountScraper:
+    """采集账号主页所有作品数据"""
+
+    def __init__(self, headless=True):
+        self.headless = headless
+        self.driver = None
+
+    def _init_driver(self):
+        options = Options()
+        if self.headless:
+            options.add_argument("--headless=new")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--log-level=3")
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        self.driver = webdriver.Edge(options=options)
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
+        )
+
+    def _ensure_driver(self):
+        if self.driver is None:
+            self._init_driver()
+
+    def analyze(self, url, max_scroll=30):
+        """采集账号主页作品列表，返回 (账号信息, 作品列表)"""
+        self._ensure_driver()
+        self.driver.get(url)
+        time.sleep(5)
+
+        # 获取账号基本信息
+        account_info = self._extract_account_info()
+
+        # 滚动加载更多作品
+        videos = []
+        seen_urls = set()
+        no_new_count = 0
+
+        for i in range(max_scroll):
+            new_videos = self._extract_video_list()
+            added = 0
+            for v in new_videos:
+                key = v.get("url", v.get("title", ""))
+                if key and key not in seen_urls:
+                    seen_urls.add(key)
+                    videos.append(v)
+                    added += 1
+
+            if added == 0:
+                no_new_count += 1
+                if no_new_count >= 3:
+                    break
+            else:
+                no_new_count = 0
+
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+
+        return account_info, videos
+
+    def _extract_account_info(self):
+        try:
+            info = self.driver.execute_script("""
+            var result = {};
+
+            // 抖音账号信息
+            var nameEl = document.querySelector('[data-e2e="user-info"] .j5WZzJdp')
+                || document.querySelector('h1')
+                || document.querySelector('[class*="nickname"]');
+            result.name = nameEl ? nameEl.textContent.trim() : '';
+
+            var followerEl = document.querySelector('[data-e2e="user-info"] [class*="follower"]')
+                || document.querySelector('[class*="follower"] span');
+            result.followers = followerEl ? followerEl.textContent.trim() : '';
+
+            var descEl = document.querySelector('[data-e2e="user-info"] .dFTJrJMt')
+                || document.querySelector('[class*="desc"]');
+            result.description = descEl ? descEl.textContent.trim().substring(0, 200) : '';
+
+            return result;
+            """)
+            return info or {}
+        except Exception:
+            return {}
+
+    def _extract_video_list(self):
+        try:
+            videos = self.driver.execute_script("""
+            var videos = [];
+
+            // 方案1: 从 RENDER_DATA 提取
+            var rd = document.getElementById('RENDER_DATA');
+            if (rd) {
+                try {
+                    var data = JSON.parse(decodeURIComponent(rd.textContent));
+                    function find(obj, depth) {
+                        if (depth > 8 || !obj || typeof obj !== 'object') return;
+                        if (Array.isArray(obj) && obj.length > 0) {
+                            var first = obj[0];
+                            if (first && (first.aweme_id || first.awemeId || first.desc !== undefined)) {
+                                for (var i = 0; i < obj.length; i++) {
+                                    var item = obj[i];
+                                    var stats = item.statistics || item.stats || {};
+                                    videos.push({
+                                        title: (item.desc || '').substring(0, 100),
+                                        likes: parseInt(stats.digg_count || stats.diggCount || 0),
+                                        comments: parseInt(stats.comment_count || stats.commentCount || 0),
+                                        collects: parseInt(stats.collect_count || stats.collectCount || 0),
+                                        shares: parseInt(stats.share_count || stats.shareCount || 0),
+                                        views: parseInt(stats.play_count || stats.playCount || 0)
+                                    });
+                                }
+                                return;
+                            }
+                        }
+                        for (var k in obj) find(obj[k], depth + 1);
+                    }
+                    find(data, 0);
+                } catch(e) {}
+            }
+
+            // 方案2: 从 DOM 提取
+            if (videos.length === 0) {
+                var items = document.querySelectorAll('[class*="e6wsjNLL"], [class*="videoItem"], a[href*="/video/"]');
+                for (var i = 0; i < items.length; i++) {
+                    var el = items[i];
+                    var titleEl = el.querySelector('[class*="title"], p, span');
+                    var numEl = el.querySelector('[class*="count"], [class*="num"]');
+                    var linkEl = el.tagName === 'A' ? el : el.querySelector('a');
+                    var href = linkEl ? linkEl.href : '';
+
+                    videos.push({
+                        title: titleEl ? titleEl.textContent.trim().substring(0, 100) : '',
+                        url: href,
+                        likes: numEl ? parseInt(numEl.textContent.replace(/[^\\d]/g, '') || '0') : 0,
+                        comments: 0, collects: 0, shares: 0, views: 0
+                    });
+                }
+            }
+
+            return videos;
+            """)
+            return videos or []
+        except Exception:
+            return []
+
+    def close(self):
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            self.driver = None
+
+
+# =========================================================================
 # 采集线程
 # =========================================================================
 
@@ -659,11 +825,12 @@ class DataAnalyzer:
 class Application(ttk.Window):
     def __init__(self):
         ttk.Window.__init__(self, title="新媒体数据采集与分析工具", themename="cosmo",
-                            size=(960, 680), minsize=(800, 550))
+                            size=(1060, 720), minsize=(800, 550))
         self.msg_queue = queue.Queue()
         self.results = []
         self.scraper = None
         self.is_running = False
+        self.account_results = []
         self._build_ui()
 
     def _build_ui(self):
@@ -675,97 +842,183 @@ class Application(ttk.Window):
         ttk.Label(frm_header, text="  支持抖音 / 小红书",
                   font=("Microsoft YaHei UI", 9), bootstyle="secondary").pack(side=LEFT, padx=(5, 0), pady=(5, 0))
 
-        # --- 输入区 ---
-        frm_input = ttk.LabelFrame(self, text=" 链接输入（每行一个，支持粘贴分享文本）")
-        frm_input.pack(fill=X, padx=15, pady=(5, 8))
+        # --- Tab 页 ---
+        notebook = ttk.Notebook(self, bootstyle="primary")
+        notebook.pack(fill=BOTH, expand=True, padx=10, pady=(0, 8))
 
-        self.txt_input = tk.Text(frm_input, height=5, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
+        # ========== Tab 1: 作品采集 ==========
+        tab_scrape = ttk.Frame(notebook)
+        notebook.add(tab_scrape, text="  作品采集  ")
+        self._build_scrape_tab(tab_scrape)
+
+        # ========== Tab 2: 账号分析 ==========
+        tab_account = ttk.Frame(notebook)
+        notebook.add(tab_account, text="  账号分析  ")
+        self._build_account_tab(tab_account)
+
+    # --------------------------------------------------
+    # Tab 1: 作品采集（原有功能）
+    # --------------------------------------------------
+    def _build_scrape_tab(self, parent):
+        # 输入区
+        frm_input = ttk.LabelFrame(parent, text=" 链接输入（每行一个，支持粘贴分享文本）")
+        frm_input.pack(fill=X, padx=8, pady=(8, 6))
+
+        self.txt_input = tk.Text(frm_input, height=4, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
                                  relief=FLAT, padx=8, pady=6)
         self.txt_input.pack(fill=X, side=LEFT, expand=True)
-
         scrollbar = ttk.Scrollbar(frm_input, command=self.txt_input.yview, bootstyle="info-round")
         scrollbar.pack(side=RIGHT, fill=Y)
         self.txt_input.config(yscrollcommand=scrollbar.set)
 
-        # --- 按钮区 ---
-        frm_btns = ttk.Frame(self, padding=(15, 0))
-        frm_btns.pack(fill=X, pady=(0, 5))
+        # 按钮区
+        frm_btns = ttk.Frame(parent, padding=(8, 0))
+        frm_btns.pack(fill=X, pady=(0, 4))
 
         ttk.Label(frm_btns, text="平台:", font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 4))
         self.platform_var = tk.StringVar(value="auto")
-        platform_combo = ttk.Combobox(frm_btns, textvariable=self.platform_var,
-                                       values=["auto", "douyin", "xiaohongshu"],
-                                       state="readonly", width=12, font=("Microsoft YaHei UI", 9))
-        platform_combo.pack(side=LEFT, padx=(0, 12))
+        ttk.Combobox(frm_btns, textvariable=self.platform_var,
+                     values=["auto", "douyin", "xiaohongshu"],
+                     state="readonly", width=12, font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 12))
 
         self.btn_start = ttk.Button(frm_btns, text="  开始采集", command=self.start_scrape,
                                      bootstyle="success", width=10)
         self.btn_start.pack(side=LEFT, padx=(0, 6))
-
         ttk.Button(frm_btns, text="清空", command=self.clear_all,
                    bootstyle="light", width=6).pack(side=LEFT, padx=(0, 6))
         ttk.Button(frm_btns, text="从文件导入", command=self.import_file,
                    bootstyle="light", width=10).pack(side=LEFT, padx=(0, 6))
 
-        self.lbl_status = ttk.Label(frm_btns, text="就绪", font=("Microsoft YaHei UI", 9),
-                                     bootstyle="secondary")
+        self.lbl_status = ttk.Label(frm_btns, text="就绪", font=("Microsoft YaHei UI", 9), bootstyle="secondary")
         self.lbl_status.pack(side=RIGHT)
 
-        # --- 进度条 ---
-        self.progress = ttk.Progressbar(self, mode="determinate", bootstyle="info-striped")
-        self.progress.pack(fill=X, padx=15, pady=(0, 5))
+        # 进度条
+        self.progress = ttk.Progressbar(parent, mode="determinate", bootstyle="info-striped")
+        self.progress.pack(fill=X, padx=8, pady=(0, 4))
 
-        # --- 日志区 ---
-        frm_log = ttk.LabelFrame(self, text=" 运行日志")
-        frm_log.pack(fill=X, padx=15, pady=(0, 5))
-
-        self.txt_log = tk.Text(frm_log, height=3, wrap=tk.WORD, state=tk.DISABLED,
+        # 日志区
+        frm_log = ttk.LabelFrame(parent, text=" 运行日志")
+        frm_log.pack(fill=X, padx=8, pady=(0, 4))
+        self.txt_log = tk.Text(frm_log, height=2, wrap=tk.WORD, state=tk.DISABLED,
                                font=("Consolas", 9), relief=FLAT, padx=6, pady=4,
                                bg="#f8f9fa", fg="#495057")
         self.txt_log.pack(fill=X)
 
-        # --- 结果表格 ---
-        frm_table = ttk.LabelFrame(self, text=" 采集结果")
-        frm_table.pack(fill=BOTH, expand=True, padx=15, pady=(0, 8))
+        # 结果表格
+        frm_table = ttk.LabelFrame(parent, text=" 采集结果")
+        frm_table.pack(fill=BOTH, expand=True, padx=8, pady=(0, 4))
 
         columns = ("url", "author", "title", "likes", "comments", "collects", "shares")
-        self.tree = ttk.Treeview(frm_table, columns=columns, show="headings", height=8,
-                                  bootstyle="primary")
-
+        self.tree = ttk.Treeview(frm_table, columns=columns, show="headings", height=6, bootstyle="primary")
         headers = {
-            "url": ("链接", 140), "author": ("作者", 90), "title": ("标题", 220),
-            "likes": ("点赞", 80), "comments": ("评论", 80),
-            "collects": ("收藏", 80), "shares": ("转发", 80)
+            "url": ("链接", 140), "author": ("作者", 90), "title": ("标题", 200),
+            "likes": ("点赞", 70), "comments": ("评论", 70),
+            "collects": ("收藏", 70), "shares": ("转发", 70)
         }
         for col, (text, width) in headers.items():
             self.tree.heading(col, text=text)
-            self.tree.column(col, width=width, minwidth=50, anchor=CENTER if col in
-                            ("likes", "comments", "collects", "shares") else W)
+            self.tree.column(col, width=width, minwidth=50,
+                             anchor=CENTER if col in ("likes", "comments", "collects", "shares") else W)
 
         scroll_y = ttk.Scrollbar(frm_table, orient=VERTICAL, command=self.tree.yview, bootstyle="primary-round")
         scroll_x = ttk.Scrollbar(frm_table, orient=HORIZONTAL, command=self.tree.xview, bootstyle="primary-round")
         self.tree.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
-
         self.tree.grid(row=0, column=0, sticky="nsew")
         scroll_y.grid(row=0, column=1, sticky="ns")
         scroll_x.grid(row=1, column=0, sticky="ew")
         frm_table.grid_rowconfigure(0, weight=1)
         frm_table.grid_columnconfigure(0, weight=1)
 
-        # --- 底部按钮 ---
-        frm_bottom = ttk.Frame(self, padding=(15, 5, 15, 10))
+        # 底部按钮
+        frm_bottom = ttk.Frame(parent, padding=(8, 4, 8, 6))
         frm_bottom.pack(fill=X)
-
         ttk.Button(frm_bottom, text="  导出 Excel", command=self.export_excel,
                    bootstyle="success-outline", width=13).pack(side=LEFT, padx=(0, 8))
         ttk.Button(frm_bottom, text="  数据分析", command=self.show_analysis,
                    bootstyle="info-outline", width=13).pack(side=LEFT, padx=(0, 8))
         ttk.Button(frm_bottom, text="  调试提取", command=self.debug_extract,
                    bootstyle="warning-outline", width=13).pack(side=LEFT, padx=(0, 8))
-
         self.lbl_count = ttk.Label(frm_bottom, text="共 0 条数据",
                                     font=("Microsoft YaHei UI", 9), bootstyle="secondary")
         self.lbl_count.pack(side=RIGHT)
+
+    # --------------------------------------------------
+    # Tab 2: 账号分析（新功能）
+    # --------------------------------------------------
+    def _build_account_tab(self, parent):
+        # 输入区
+        frm_input = ttk.LabelFrame(parent, text=" 输入账号主页链接（抖音）")
+        frm_input.pack(fill=X, padx=8, pady=(8, 6))
+
+        frm_row = ttk.Frame(frm_input, padding=6)
+        frm_row.pack(fill=X)
+
+        self.txt_account_url = tk.Entry(frm_row, font=("Microsoft YaHei UI", 10))
+        self.txt_account_url.pack(side=LEFT, fill=X, expand=True, padx=(0, 8))
+        self.txt_account_url.insert(0, "")
+
+        ttk.Label(frm_row, text="滚动次数:", font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 4))
+        self.scroll_count_var = tk.StringVar(value="20")
+        ttk.Combobox(frm_row, textvariable=self.scroll_count_var,
+                     values=["10", "20", "30", "50"], width=5, font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 8))
+
+        self.btn_account_start = ttk.Button(frm_row, text="  开始分析", command=self.start_account_analysis,
+                                             bootstyle="success", width=10)
+        self.btn_account_start.pack(side=LEFT)
+
+        # 状态
+        self.lbl_account_status = ttk.Label(parent, text="输入账号主页链接，点击开始分析",
+                                             font=("Microsoft YaHei UI", 9), bootstyle="secondary")
+        self.lbl_account_status.pack(padx=8, anchor=W)
+
+        # 账号信息卡片
+        frm_info = ttk.LabelFrame(parent, text=" 账号概览 ")
+        frm_info.pack(fill=X, padx=8, pady=(4, 4))
+
+        self.lbl_account_info = tk.Text(frm_info, height=4, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
+                                         relief=FLAT, padx=10, pady=8, state=tk.DISABLED)
+        self.lbl_account_info.pack(fill=X)
+
+        # 分析结果
+        paned = ttk.PanedWindow(parent, orient=HORIZONTAL)
+        paned.pack(fill=BOTH, expand=True, padx=8, pady=(0, 6))
+
+        # 左侧：作品列表
+        frm_left = ttk.LabelFrame(paned, text=" 作品列表 ")
+        paned.add(frm_left, weight=3)
+
+        acc_columns = ("idx", "title", "likes", "comments", "collects", "engagement")
+        self.tree_account = ttk.Treeview(frm_left, columns=acc_columns, show="headings",
+                                          height=8, bootstyle="info")
+        acc_headers = {
+            "idx": ("#", 35), "title": ("标题", 220), "likes": ("点赞", 70),
+            "comments": ("评论", 60), "collects": ("收藏", 60), "engagement": ("互动率", 65)
+        }
+        for col, (text, width) in acc_headers.items():
+            self.tree_account.heading(col, text=text)
+            self.tree_account.column(col, width=width, minwidth=30, anchor=CENTER)
+
+        acc_scroll = ttk.Scrollbar(frm_left, orient=VERTICAL, command=self.tree_account.yview,
+                                    bootstyle="info-round")
+        self.tree_account.configure(yscrollcommand=acc_scroll.set)
+        self.tree_account.pack(side=LEFT, fill=BOTH, expand=True)
+        acc_scroll.pack(side=RIGHT, fill=Y)
+
+        # 右侧：数据统计
+        frm_right = ttk.LabelFrame(paned, text=" 数据统计 ")
+        paned.add(frm_right, weight=2)
+
+        self.txt_account_stats = tk.Text(frm_right, wrap=tk.WORD, font=("Consolas", 9),
+                                          relief=FLAT, padx=10, pady=8, state=tk.DISABLED)
+        self.txt_account_stats.pack(fill=BOTH, expand=True)
+
+        # 底部按钮
+        frm_acc_bottom = ttk.Frame(parent, padding=(8, 4, 8, 6))
+        frm_acc_bottom.pack(fill=X)
+        ttk.Button(frm_acc_bottom, text="  导出分析报告", command=self.export_account_report,
+                   bootstyle="success-outline", width=14).pack(side=LEFT, padx=(0, 8))
+        ttk.Button(frm_acc_bottom, text="  导出作品数据", command=self.export_account_excel,
+                   bootstyle="info-outline", width=14).pack(side=LEFT)
 
     # ------ 操作 ------
 
@@ -1062,6 +1315,199 @@ class Application(ttk.Window):
             self._append_log(traceback.format_exc())
         finally:
             scraper.close()
+
+    # ------ 账号分析 ------
+
+    def start_account_analysis(self):
+        url = self.txt_account_url.get().strip()
+        if not url:
+            messagebox.showwarning("提示", "请输入账号主页链接！")
+            return
+
+        max_scroll = int(self.scroll_count_var.get())
+        self.account_results = []
+        self.btn_account_start.config(state=tk.DISABLED)
+        self.lbl_account_status.config(text="采集中，请稍候（可能需要 1-2 分钟）...")
+
+        # 清空旧数据
+        for item in self.tree_account.get_children():
+            self.tree_account.delete(item)
+        self._set_text(self.lbl_account_info, "")
+        self._set_text(self.txt_account_stats, "")
+
+        self.account_scraper = AccountScraper(headless=False)
+        thread = threading.Thread(target=self._run_account_analysis, args=(url, max_scroll), daemon=True)
+        thread.start()
+        self._poll_account_queue()
+
+    def _run_account_analysis(self, url, max_scroll):
+        try:
+            account_info, videos = self.account_scraper.analyze(url, max_scroll)
+            self.msg_queue.put({"type": "account_info", "data": account_info})
+            for v in videos:
+                self.msg_queue.put({"type": "account_video", "data": v})
+            self.msg_queue.put({"type": "account_done"})
+        except Exception as e:
+            self.msg_queue.put({"type": "account_error", "text": str(e)})
+
+    def _poll_account_queue(self):
+        try:
+            while True:
+                msg = self.msg_queue.get_nowait()
+                if msg["type"] == "account_info":
+                    self._display_account_info(msg["data"])
+                elif msg["type"] == "account_video":
+                    self.account_results.append(msg["data"])
+                    self._add_account_row(msg["data"], len(self.account_results))
+                elif msg["type"] == "account_done":
+                    self._on_account_complete()
+                    return
+                elif msg["type"] == "account_error":
+                    self.lbl_account_status.config(text="采集失败: " + msg["text"])
+                    self.btn_account_start.config(state=tk.NORMAL)
+                    if hasattr(self, 'account_scraper'):
+                        self.account_scraper.close()
+                    return
+        except queue.Empty:
+            pass
+        self.after(100, self._poll_account_queue)
+
+    def _display_account_info(self, info):
+        name = info.get("name", "未知")
+        followers = info.get("followers", "未知")
+        desc = info.get("description", "")
+        text = f"账号: {name}    粉丝: {followers}\n简介: {desc}" if desc else f"账号: {name}    粉丝: {followers}"
+        self._set_text(self.lbl_account_info, text)
+
+    def _on_account_complete(self):
+        self.btn_account_start.config(state=tk.NORMAL)
+        if hasattr(self, 'account_scraper'):
+            self.account_scraper.close()
+
+        count = len(self.account_results)
+        self.lbl_account_status.config(text=f"采集完成，共 {count} 条作品")
+
+        if count > 0:
+            self._display_account_stats()
+
+    def _display_account_stats(self):
+        videos = self.account_results
+        if not videos:
+            return
+
+        likes_list = [v.get("likes", 0) for v in videos]
+        comments_list = [v.get("comments", 0) for v in videos]
+        collects_list = [v.get("collects", 0) for v in videos]
+        shares_list = [v.get("shares", 0) for v in videos]
+
+        total_likes = sum(likes_list)
+        total_comments = sum(comments_list)
+        total_collects = sum(collects_list)
+        total_shares = sum(shares_list)
+        count = len(videos)
+
+        avg_likes = total_likes / count
+        avg_comments = total_comments / count
+        avg_collects = total_collects / count
+        avg_shares = total_shares / count
+
+        # 爆款率（点赞 > 平均值 3 倍）
+        viral_threshold = avg_likes * 3
+        viral_count = sum(1 for l in likes_list if l >= viral_threshold)
+        viral_rate = viral_count / count * 100
+
+        # Top 5
+        sorted_by_likes = sorted(videos, key=lambda x: x.get("likes", 0), reverse=True)
+
+        lines = [
+            "=" * 40,
+            "账号数据概览",
+            "=" * 40,
+            f"作品总数:    {count}",
+            f"总点赞:      {self._fmt_num(total_likes)}",
+            f"总评论:      {self._fmt_num(total_comments)}",
+            f"总收藏:      {self._fmt_num(total_collects)}",
+            f"总转发:      {self._fmt_num(total_shares)}",
+            "",
+            f"平均点赞:    {self._fmt_num(int(avg_likes))}",
+            f"平均评论:    {self._fmt_num(int(avg_comments))}",
+            f"平均收藏:    {self._fmt_num(int(avg_collects))}",
+            f"平均转发:    {self._fmt_num(int(avg_shares))}",
+            "",
+            f"爆款率:      {viral_rate:.1f}%（{viral_count}/{count}，点赞>{self._fmt_num(int(viral_threshold))}）",
+            "",
+            "=" * 40,
+            "点赞 Top 5",
+            "=" * 40,
+        ]
+        for i, v in enumerate(sorted_by_likes[:5], 1):
+            title = v.get("title", "")[:30] or "(无标题)"
+            likes = self._fmt_num(v.get("likes", 0))
+            lines.append(f"  {i}. [{likes}赞] {title}")
+
+        self._set_text(self.txt_account_stats, "\n".join(lines))
+
+        # 标记爆款
+        for i, item in enumerate(self.tree_account.get_children()):
+            data = self.account_results[i]
+            if data.get("likes", 0) >= viral_threshold:
+                self.tree_account.item(item, tags=("viral",))
+        self.tree_account.tag_configure("viral", background="#fff3cd")
+
+    def _add_account_row(self, data, idx):
+        likes = data.get("likes", 0)
+        comments = data.get("comments", 0)
+        collects = data.get("collects", 0)
+        total_interact = likes + comments + collects
+        engagement = f"{total_interact}"  # 简化展示
+
+        self.tree_account.insert("", tk.END, values=(
+            idx,
+            (data.get("title", "") or "(无标题)")[:50],
+            self._fmt_num(likes),
+            self._fmt_num(comments),
+            self._fmt_num(collects),
+            engagement,
+        ))
+
+    def _fmt_num(self, n):
+        if n >= 10000:
+            return f"{n / 10000:.1f}万"
+        return str(n)
+
+    def export_account_report(self):
+        if not self.account_results:
+            messagebox.showwarning("提示", "没有数据可导出！")
+            return
+        filepath = filedialog.asksaveasfilename(
+            title="保存分析报告", defaultextension=".txt",
+            filetypes=[("Text files", "*.txt")]
+        )
+        if filepath:
+            stats = self.txt_account_stats.get("1.0", tk.END)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(stats)
+            messagebox.showinfo("完成", "报告已导出到：\n" + filepath)
+
+    def export_account_excel(self):
+        if not self.account_results:
+            messagebox.showwarning("提示", "没有数据可导出！")
+            return
+        filepath = filedialog.asksaveasfilename(
+            title="保存作品数据", defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")]
+        )
+        if filepath:
+            analyzer = DataAnalyzer(self.account_results)
+            analyzer.to_excel(filepath)
+            messagebox.showinfo("完成", "已导出到：\n" + filepath)
+
+    def _set_text(self, widget, text):
+        widget.config(state=tk.NORMAL)
+        widget.delete("1.0", tk.END)
+        if text:
+            widget.insert("1.0", text)
+        widget.config(state=tk.DISABLED)
 
     # ------ 辅助 ------
 
