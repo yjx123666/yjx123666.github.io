@@ -631,31 +631,14 @@ class AccountScraper:
         self._wait_for_login = False
 
     def _init_driver(self):
-        # 使用固定的用户数据目录，保留登录状态
-        profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".edge_profile")
-        if not os.path.isdir(profile_dir):
-            os.makedirs(profile_dir)
-
         # 关闭已有的 Edge 进程，避免配置文件锁定
         os.system("taskkill /f /im msedge.exe >nul 2>&1")
         time.sleep(1)
 
         options = Options()
-        options.add_argument(f"--user-data-dir={profile_dir}")
-        options.add_argument("--profile-directory=Default")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument("--log-level=3")
-        options.add_argument("--no-first-run")
-        options.add_argument("--disable-features=Translate")
         self.driver = webdriver.Edge(options=options)
-        self.driver.execute_cdp_cmd(
-            "Page.addScriptToEvaluateOnNewDocument",
-            {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
-        )
 
     def _save_cookies(self):
         try:
