@@ -1578,8 +1578,7 @@ class Application(ttk.Window):
                     self.lbl_account_status.config(text="采集失败: " + msg["text"])
                     self.btn_account_start.config(state=tk.NORMAL)
                     self.btn_confirm_login.config(state=tk.DISABLED)
-                    if hasattr(self, 'account_scraper'):
-                        self.account_scraper.close()
+                    # 不自动关闭浏览器
                     return
         except queue.Empty:
             pass
@@ -1595,8 +1594,7 @@ class Application(ttk.Window):
     def _on_account_complete(self):
         self.btn_account_start.config(state=tk.NORMAL)
         self.btn_confirm_login.config(state=tk.DISABLED)
-        if hasattr(self, 'account_scraper'):
-            self.account_scraper.close()
+        # 不自动关闭浏览器，由用户手动关闭
 
         count = len(self.account_results)
         self.lbl_account_status.config(text=f"采集完成，共 {count} 条作品")
