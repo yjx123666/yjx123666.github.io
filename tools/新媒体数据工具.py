@@ -709,36 +709,28 @@ class AccountScraper:
         """采集账号主页作品列表，返回 (账号信息, 作品列表)"""
         self._ensure_driver()
 
-        # 尝试加载 cookies
-        has_cookies = self._load_cookies()
+        # 先访问目标页面（会自动跳转）
+        self.msg_queue.put({"type": "account_log", "text": "正在打开链接..."})
+        self.driver.get(url)
+        time.sleep(5)
 
-        if has_cookies and self._is_logged_in():
-            self.msg_queue.put({"type": "account_log", "text": "已加载保存的登录状态，开始采集..."})
-        else:
-            # 需要登录
-            self.driver.get("https://www.douyin.com")
-            time.sleep(2)
+        # 如果跳转到了登录页或首页，需要用户登录
+        current_url = self.driver.current_url
+        if "login" in current_url or current_url.rstrip("/") == "https://www.douyin.com":
             self.msg_queue.put({"type": "account_log", "text": "请在浏览器中登录抖音，登录后点击「确认登录」"})
             self._wait_for_login = True
             while self._wait_for_login:
                 time.sleep(1)
-            # 等待页面加载
-            time.sleep(3)
-            # 保存 cookies
-            self._save_cookies()
-            self.msg_queue.put({"type": "account_log", "text": "登录状态已保存，开始采集..."})
-
-        # 导航到目标页面
-        self.driver.get(url)
-        time.sleep(5)
+            # 登录后重新访问目标链接
+            self.driver.get(url)
+            time.sleep(5)
 
         # 如果是短链接或视频页，需要找到作者主页
         current_url = self.driver.current_url
-        if "/video/" in current_url or "/note/" in current_url or "v.douyin" in url:
+        if "/video/" in current_url or "/note/" in current_url:
             self.msg_queue.put({"type": "account_log", "text": "正在查找作者主页..."})
             try:
                 profile_url = self.driver.execute_script("""
-                // 方案1: 从页面链接找作者主页
                 var links = document.querySelectorAll('a[href*="/user/"]');
                 for (var i = 0; i < links.length; i++) {
                     var href = links[i].href;
@@ -746,7 +738,6 @@ class AccountScraper:
                         return href.split('?')[0];
                     }
                 }
-                // 方案2: 从 RENDER_DATA 找作者 ID
                 var rd = document.getElementById('RENDER_DATA');
                 if (rd) {
                     try {
@@ -772,7 +763,7 @@ class AccountScraper:
                     self.driver.get(profile_url)
                     time.sleep(5)
                 else:
-                    self.msg_queue.put({"type": "account_log", "text": "未找到作者主页，请直接粘贴用户主页链接"})
+                    self.msg_queue.put({"type": "account_log", "text": "未找到作者主页"})
                     return {}, []
             except Exception:
                 pass
@@ -786,7 +777,7 @@ class AccountScraper:
         no_new_count = 0
 
         for i in range(max_scroll):
-            self.msg_queue.put({"type": "account_log", "text": f"正在采集作品... 滚动 {i+1}/{max_scroll}，已获取 {len(videos)} 条"})
+            self.msg_queue.put({"type": "account_log", "text": f"正在采集... 滚动 {i+1}/{max_scroll}，已获取 {len(videos)} 条"})
 
             new_videos = self._extract_video_list()
             added = 0
@@ -807,11 +798,8 @@ class AccountScraper:
             else:
                 no_new_count = 0
 
-            # 滚动到底部
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
-
-            # 检查是否到底
             last_height = self.driver.execute_script("return document.body.scrollHeight")
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(1)
