@@ -661,16 +661,20 @@ class AccountScraper:
 
         # 滚动加载更多作品
         videos = []
-        seen_urls = set()
+        seen_keys = set()
         no_new_count = 0
 
         for i in range(max_scroll):
             new_videos = self._extract_video_list()
             added = 0
             for v in new_videos:
-                key = v.get("url", v.get("title", ""))
-                if key and key not in seen_urls:
-                    seen_urls.add(key)
+                # 用 url + title + likes 组合做去重 key，避免误过滤
+                url = v.get("url", "")
+                title = v.get("title", "")
+                likes = v.get("likes", 0)
+                key = url or f"{title}_{likes}_{len(videos)}"
+                if key not in seen_keys:
+                    seen_keys.add(key)
                     videos.append(v)
                     added += 1
 
@@ -681,8 +685,17 @@ class AccountScraper:
             else:
                 no_new_count = 0
 
+            # 滚动到底部触发加载
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
+
+            # 如果页面高度没变化，可能已到底部
+            last_height = self.driver.execute_script("return document.body.scrollHeight")
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+            new_height = self.driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                no_new_count += 1
 
         return account_info, videos
 
@@ -716,54 +729,82 @@ class AccountScraper:
             videos = self.driver.execute_script("""
             var videos = [];
 
-            // 方案1: 从 RENDER_DATA 提取
+            // 方案1: 从 RENDER_DATA 提取（最可靠）
             var rd = document.getElementById('RENDER_DATA');
             if (rd) {
                 try {
-                    var data = JSON.parse(decodeURIComponent(rd.textContent));
-                    function find(obj, depth) {
-                        if (depth > 8 || !obj || typeof obj !== 'object') return;
-                        if (Array.isArray(obj) && obj.length > 0) {
-                            var first = obj[0];
-                            if (first && (first.aweme_id || first.awemeId || first.desc !== undefined)) {
-                                for (var i = 0; i < obj.length; i++) {
-                                    var item = obj[i];
-                                    var stats = item.statistics || item.stats || {};
-                                    videos.push({
-                                        title: (item.desc || '').substring(0, 100),
-                                        likes: parseInt(stats.digg_count || stats.diggCount || 0),
-                                        comments: parseInt(stats.comment_count || stats.commentCount || 0),
-                                        collects: parseInt(stats.collect_count || stats.collectCount || 0),
-                                        shares: parseInt(stats.share_count || stats.shareCount || 0),
-                                        views: parseInt(stats.play_count || stats.playCount || 0)
-                                    });
+                    var rawData = rd.textContent;
+                    var data = JSON.parse(decodeURIComponent(rawData));
+
+                    // 递归查找包含 aweme_id 的数组
+                    function findAwemeList(obj, depth) {
+                        if (depth > 10 || !obj || typeof obj !== 'object') return null;
+                        if (Array.isArray(obj)) {
+                            for (var i = 0; i < obj.length; i++) {
+                                var item = obj[i];
+                                if (item && (item.aweme_id || item.awemeId) && (item.desc !== undefined || item.statistics)) {
+                                    return obj;
                                 }
-                                return;
                             }
                         }
-                        for (var k in obj) find(obj[k], depth + 1);
+                        for (var k in obj) {
+                            var found = findAwemeList(obj[k], depth + 1);
+                            if (found) return found;
+                        }
+                        return null;
                     }
-                    find(data, 0);
+
+                    var awemeList = findAwemeList(data, 0);
+                    if (awemeList) {
+                        for (var i = 0; i < awemeList.length; i++) {
+                            var item = awemeList[i];
+                            var stats = item.statistics || item.stats || {};
+                            var author = item.author || {};
+                            videos.push({
+                                title: (item.desc || '').substring(0, 100),
+                                author: author.nickname || author.nick_name || '',
+                                likes: parseInt(stats.digg_count || stats.diggCount || 0),
+                                comments: parseInt(stats.comment_count || stats.commentCount || 0),
+                                collects: parseInt(stats.collect_count || stats.collectCount || 0),
+                                shares: parseInt(stats.share_count || stats.shareCount || 0),
+                                views: parseInt(stats.play_count || stats.playCount || 0)
+                            });
+                        }
+                    }
                 } catch(e) {}
             }
 
-            // 方案2: 从 DOM 提取
+            // 方案2: 从 DOM 提取（兜底）
             if (videos.length === 0) {
-                var items = document.querySelectorAll('[class*="e6wsjNLL"], [class*="videoItem"], a[href*="/video/"]');
-                for (var i = 0; i < items.length; i++) {
-                    var el = items[i];
-                    var titleEl = el.querySelector('[class*="title"], p, span');
-                    var numEl = el.querySelector('[class*="count"], [class*="num"]');
-                    var linkEl = el.tagName === 'A' ? el : el.querySelector('a');
-                    var href = linkEl ? linkEl.href : '';
+                // 查找所有视频卡片链接
+                var links = document.querySelectorAll('a[href*="/video/"], a[href*="/note/"]');
+                var seen = new Set();
+                links.forEach(function(a) {
+                    var href = a.href;
+                    if (seen.has(href)) return;
+                    seen.add(href);
+
+                    // 找到包含这个链接的卡片容器
+                    var card = a.closest('[class*="item"], [class*="card"], li, [class*="Cell"]') || a;
+                    var titleEl = card.querySelector('[class*="title"], [class*="desc"], p, span');
+                    var numEls = card.querySelectorAll('span');
+                    var nums = [];
+                    numEls.forEach(function(el) {
+                        var t = el.textContent.trim();
+                        if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 10) {
+                            nums.push(t);
+                        }
+                    });
 
                     videos.push({
                         title: titleEl ? titleEl.textContent.trim().substring(0, 100) : '',
                         url: href,
-                        likes: numEl ? parseInt(numEl.textContent.replace(/[^\\d]/g, '') || '0') : 0,
-                        comments: 0, collects: 0, shares: 0, views: 0
+                        likes: nums[0] ? parseInt(nums[0].replace(/[^\\d.]/g, '')) || 0 : 0,
+                        comments: nums[1] ? parseInt(nums[1].replace(/[^\\d.]/g, '')) || 0 : 0,
+                        collects: nums[2] ? parseInt(nums[2].replace(/[^\\d.]/g, '')) || 0 : 0,
+                        shares: 0, views: 0
                     });
-                }
+                });
             }
 
             return videos;
@@ -1025,46 +1066,48 @@ class Application(ttk.Window):
                                              font=("Microsoft YaHei UI", 9), bootstyle="secondary")
         self.lbl_account_status.pack(padx=8, anchor=W)
 
-        # 账号信息卡片
-        frm_info = ttk.LabelFrame(parent, text=" 账号概览 ")
-        frm_info.pack(fill=X, padx=8, pady=(4, 4))
+        # 账号信息 + 数据统计（水平排列）
+        frm_top_row = ttk.Frame(parent)
+        frm_top_row.pack(fill=X, padx=8, pady=(4, 4))
 
-        self.lbl_account_info = tk.Text(frm_info, height=4, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
+        # 左侧：账号信息
+        frm_info = ttk.LabelFrame(frm_top_row, text=" 账号概览 ")
+        frm_info.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 4))
+
+        self.lbl_account_info = tk.Text(frm_info, height=5, wrap=tk.WORD, font=("Microsoft YaHei UI", 10),
                                          relief=FLAT, padx=10, pady=8, state=tk.DISABLED)
-        self.lbl_account_info.pack(fill=X)
+        self.lbl_account_info.pack(fill=BOTH, expand=True)
 
-        # 分析结果
-        paned = ttk.Panedwindow(parent, orient=HORIZONTAL)
-        paned.pack(fill=BOTH, expand=True, padx=8, pady=(0, 6))
+        # 右侧：数据统计
+        frm_stats = ttk.LabelFrame(frm_top_row, text=" 数据统计 ")
+        frm_stats.pack(side=LEFT, fill=BOTH, expand=True, padx=(4, 0))
 
-        # 左侧：作品列表
-        frm_left = ttk.LabelFrame(paned, text=" 作品列表 ")
-        paned.add(frm_left, weight=3)
+        self.txt_account_stats = tk.Text(frm_stats, height=5, wrap=tk.WORD, font=("Consolas", 9),
+                                          relief=FLAT, padx=10, pady=8, state=tk.DISABLED)
+        self.txt_account_stats.pack(fill=BOTH, expand=True)
 
-        acc_columns = ("idx", "title", "likes", "comments", "collects", "engagement")
-        self.tree_account = ttk.Treeview(frm_left, columns=acc_columns, show="headings",
-                                          height=8, bootstyle="info")
+        # 作品列表
+        frm_table_acc = ttk.LabelFrame(parent, text=" 作品列表（按点赞排序）")
+        frm_table_acc.pack(fill=BOTH, expand=True, padx=8, pady=(0, 4))
+
+        acc_columns = ("idx", "title", "likes", "comments", "collects", "shares")
+        self.tree_account = ttk.Treeview(frm_table_acc, columns=acc_columns, show="headings",
+                                          height=10, bootstyle="info")
         acc_headers = {
-            "idx": ("#", 35), "title": ("标题", 220), "likes": ("点赞", 70),
-            "comments": ("评论", 60), "collects": ("收藏", 60), "engagement": ("互动率", 65)
+            "idx": ("#", 40), "title": ("标题", 320), "likes": ("点赞", 80),
+            "comments": ("评论", 70), "collects": ("收藏", 70), "shares": ("转发", 70)
         }
         for col, (text, width) in acc_headers.items():
             self.tree_account.heading(col, text=text)
-            self.tree_account.column(col, width=width, minwidth=30, anchor=CENTER)
+            self.tree_account.column(col, width=width, minwidth=30, anchor=CENTER if col != "title" else W)
 
-        acc_scroll = ttk.Scrollbar(frm_left, orient=VERTICAL, command=self.tree_account.yview,
-                                    bootstyle="info-round")
-        self.tree_account.configure(yscrollcommand=acc_scroll.set)
-        self.tree_account.pack(side=LEFT, fill=BOTH, expand=True)
-        acc_scroll.pack(side=RIGHT, fill=Y)
-
-        # 右侧：数据统计
-        frm_right = ttk.LabelFrame(paned, text=" 数据统计 ")
-        paned.add(frm_right, weight=2)
-
-        self.txt_account_stats = tk.Text(frm_right, wrap=tk.WORD, font=("Consolas", 9),
-                                          relief=FLAT, padx=10, pady=8, state=tk.DISABLED)
-        self.txt_account_stats.pack(fill=BOTH, expand=True)
+        acc_scroll_y = ttk.Scrollbar(frm_table_acc, orient=VERTICAL, command=self.tree_account.yview,
+                                      bootstyle="info-round")
+        self.tree_account.configure(yscrollcommand=acc_scroll_y.set)
+        self.tree_account.grid(row=0, column=0, sticky="nsew")
+        acc_scroll_y.grid(row=0, column=1, sticky="ns")
+        frm_table_acc.grid_rowconfigure(0, weight=1)
+        frm_table_acc.grid_columnconfigure(0, weight=1)
 
         # 底部按钮
         frm_acc_bottom = ttk.Frame(parent, padding=(8, 4, 8, 6))
@@ -1442,6 +1485,12 @@ class Application(ttk.Window):
         self.lbl_account_status.config(text=f"采集完成，共 {count} 条作品")
 
         if count > 0:
+            # 按点赞排序后重新填充表格
+            self.account_results.sort(key=lambda x: x.get("likes", 0), reverse=True)
+            for item in self.tree_account.get_children():
+                self.tree_account.delete(item)
+            for i, v in enumerate(self.account_results, 1):
+                self._add_account_row(v, i)
             self._display_account_stats()
 
     def _display_account_stats(self):
@@ -1509,19 +1558,13 @@ class Application(ttk.Window):
         self.tree_account.tag_configure("viral", background="#fff3cd")
 
     def _add_account_row(self, data, idx):
-        likes = data.get("likes", 0)
-        comments = data.get("comments", 0)
-        collects = data.get("collects", 0)
-        total_interact = likes + comments + collects
-        engagement = f"{total_interact}"  # 简化展示
-
         self.tree_account.insert("", tk.END, values=(
             idx,
-            (data.get("title", "") or "(无标题)")[:50],
-            self._fmt_num(likes),
-            self._fmt_num(comments),
-            self._fmt_num(collects),
-            engagement,
+            (data.get("title", "") or "(无标题)")[:60],
+            self._fmt_num(data.get("likes", 0)),
+            self._fmt_num(data.get("comments", 0)),
+            self._fmt_num(data.get("collects", 0)),
+            self._fmt_num(data.get("shares", 0)),
         ))
 
     def _fmt_num(self, n):
