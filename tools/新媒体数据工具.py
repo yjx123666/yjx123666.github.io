@@ -826,14 +826,34 @@ class AccountScraper:
         try:
             info = self.driver.execute_script("""
             var result = {};
-            // 昵称
-            var nameEl = document.querySelector('h1')
-                || document.querySelector('[class*="nickname"]');
-            result.name = nameEl ? nameEl.textContent.trim() : '';
-            // 粉丝数
+
+            // 昵称 - 从页面标题或 heading 提取
+            var title = document.title || '';
+            // 标题格式通常是 "xxx的抖音 - 抖音"
+            var titleMatch = title.match(/^(.+?)的抖音/);
+            if (titleMatch) {
+                result.name = titleMatch[1].trim();
+            } else {
+                var h1 = document.querySelector('h1');
+                result.name = h1 ? h1.textContent.trim() : '';
+            }
+
+            // 粉丝、获赞、关注 - 从页面文本提取
             var allText = document.body.innerText;
+
             var followerMatch = allText.match(/(\\d[\\d.]*[万亿]?)\\s*粉丝/);
             result.followers = followerMatch ? followerMatch[1] : '';
+
+            var likesMatch = allText.match(/(\\d[\\d.]*[万亿]?)\\s*获赞/);
+            result.totalLikes = likesMatch ? likesMatch[1] : '';
+
+            var followingMatch = allText.match(/(\\d[\\d.]*[万亿]?)\\s*关注/);
+            result.following = followingMatch ? followingMatch[1] : '';
+
+            // 抖音号
+            var idMatch = allText.match(/抖音号[：:]\\s*(\\S+)/);
+            result.douyinId = idMatch ? idMatch[1] : '';
+
             return result;
             """)
             return info or {}
@@ -1610,9 +1630,16 @@ class Application(ttk.Window):
     def _display_account_info(self, info):
         name = info.get("name", "未知")
         followers = info.get("followers", "未知")
-        desc = info.get("description", "")
-        text = f"账号: {name}    粉丝: {followers}\n简介: {desc}" if desc else f"账号: {name}    粉丝: {followers}"
-        self._set_text(self.lbl_account_info, text)
+        total_likes = info.get("totalLikes", "未知")
+        following = info.get("following", "未知")
+        douyin_id = info.get("douyinId", "")
+
+        lines = [
+            f"昵称: {name}",
+            f"抖音号: {douyin_id}" if douyin_id else "",
+            f"粉丝: {followers}    获赞: {total_likes}    关注: {following}",
+        ]
+        self._set_text(self.lbl_account_info, "\n".join(line for line in lines if line))
 
     def _on_account_complete(self):
         self.btn_account_start.config(state=tk.NORMAL)
