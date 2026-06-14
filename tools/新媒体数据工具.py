@@ -728,9 +728,34 @@ class AccountScraper:
             self._save_cookies()
             self.msg_queue.put({"type": "account_log", "text": "登录状态已保存，开始采集..."})
 
-        # 导航到目标主页
+        # 导航到目标页面
         self.driver.get(url)
-        time.sleep(5)
+        time.sleep(4)
+
+        # 如果是搜索页，需要点击第一个用户进入主页
+        if "search" in url:
+            self.msg_queue.put({"type": "account_log", "text": "正在进入用户主页..."})
+            try:
+                # 等待搜索结果加载
+                time.sleep(2)
+                # 点击第一个用户链接
+                clicked = self.driver.execute_script("""
+                var links = document.querySelectorAll('a[href*="/user/"]');
+                for (var i = 0; i < links.length; i++) {
+                    var href = links[i].href;
+                    if (href.includes('/user/') && !href.includes('self')) {
+                        links[i].click();
+                        return true;
+                    }
+                }
+                return false;
+                """)
+                if clicked:
+                    time.sleep(4)
+                else:
+                    self.msg_queue.put({"type": "account_log", "text": "未找到用户，请检查输入"})
+            except Exception:
+                pass
 
         # 获取账号信息
         account_info = self._extract_account_info()
