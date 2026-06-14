@@ -728,9 +728,54 @@ class AccountScraper:
             self._save_cookies()
             self.msg_queue.put({"type": "account_log", "text": "登录状态已保存，开始采集..."})
 
-        # 导航到目标主页
+        # 导航到目标页面
         self.driver.get(url)
         time.sleep(5)
+
+        # 如果是短链接或视频页，需要找到作者主页
+        current_url = self.driver.current_url
+        if "/video/" in current_url or "/note/" in current_url or "v.douyin" in url:
+            self.msg_queue.put({"type": "account_log", "text": "正在查找作者主页..."})
+            try:
+                profile_url = self.driver.execute_script("""
+                // 方案1: 从页面链接找作者主页
+                var links = document.querySelectorAll('a[href*="/user/"]');
+                for (var i = 0; i < links.length; i++) {
+                    var href = links[i].href;
+                    if (href.includes('/user/') && !href.includes('self')) {
+                        return href.split('?')[0];
+                    }
+                }
+                // 方案2: 从 RENDER_DATA 找作者 ID
+                var rd = document.getElementById('RENDER_DATA');
+                if (rd) {
+                    try {
+                        var data = JSON.parse(decodeURIComponent(rd.textContent));
+                        function findAuthor(obj, depth) {
+                            if (depth > 8 || !obj || typeof obj !== 'object') return null;
+                            if (obj.author && obj.author.uid) {
+                                return 'https://www.douyin.com/user/' + obj.author.uid;
+                            }
+                            for (var k in obj) {
+                                var found = findAuthor(obj[k], depth + 1);
+                                if (found) return found;
+                            }
+                            return null;
+                        }
+                        return findAuthor(data, 0);
+                    } catch(e) {}
+                }
+                return null;
+                """)
+                if profile_url:
+                    self.msg_queue.put({"type": "account_log", "text": "找到作者主页，正在跳转..."})
+                    self.driver.get(profile_url)
+                    time.sleep(5)
+                else:
+                    self.msg_queue.put({"type": "account_log", "text": "未找到作者主页，请直接粘贴用户主页链接"})
+                    return {}, []
+            except Exception:
+                pass
 
         # 获取账号信息
         account_info = self._extract_account_info()
@@ -1490,14 +1535,18 @@ class Application(ttk.Window):
     # ------ 账号分析 ------
 
     def start_account_analysis(self):
-        url = self.txt_account_url.get().strip()
-        if not url:
-            messagebox.showwarning("提示", "请输入账号主页链接！")
+        raw = self.txt_account_url.get().strip()
+        if not raw:
+            messagebox.showwarning("提示", "请输入链接！")
             return
 
-        if not url.startswith("http"):
-            messagebox.showwarning("提示", "请输入完整的主页链接！\n\n获取方式：打开抖音网页版 → 进入用户主页 → 复制浏览器地址栏的链接")
+        # 从分享文本中提取 URL
+        import re
+        url_match = re.search(r'https?://[^\s]+', raw)
+        if not url_match:
+            messagebox.showwarning("提示", "未找到有效链接！")
             return
+        url = url_match.group().rstrip("/")
 
         max_scroll = int(self.scroll_count_var.get())
         self.account_results = []
