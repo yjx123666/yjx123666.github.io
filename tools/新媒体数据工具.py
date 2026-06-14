@@ -625,6 +625,7 @@ class AccountScraper:
     def __init__(self, headless=True):
         self.headless = headless
         self.driver = None
+        self.msg_queue = None
 
     def _init_driver(self):
         options = Options()
@@ -650,11 +651,31 @@ class AccountScraper:
         if self.driver is None:
             self._init_driver()
 
-    def analyze(self, url, max_scroll=30):
+    def analyze(self, url, max_scroll=30, wait_login=True):
         """采集账号主页作品列表，返回 (账号信息, 作品列表)"""
         self._ensure_driver()
         self.driver.get(url)
-        time.sleep(5)
+        time.sleep(3)
+
+        # 等待用户手动登录
+        if wait_login:
+            self.msg_queue.put({"type": "account_log", "text": "请在弹出的浏览器中登录抖音，登录完成后工具会自动继续..."})
+            # 检测是否已登录：等待页面不再包含登录按钮或 URL 不再跳转到登录页
+            for _ in range(120):  # 最多等 2 分钟
+                time.sleep(1)
+                current_url = self.driver.current_url
+                # 如果 URL 包含 user 且不包含 login，说明已登录或在主页
+                if "/user/" in current_url and "login" not in current_url:
+                    break
+                # 检查页面是否有视频列表（说明已登录能看到内容）
+                has_videos = self.driver.execute_script(
+                    "return document.querySelectorAll('a[href*=\"/video/\"]').length > 0 "
+                    "|| document.getElementById('RENDER_DATA') !== null"
+                )
+                if has_videos:
+                    break
+            self.msg_queue.put({"type": "account_log", "text": "检测到页面已加载，开始采集..."})
+            time.sleep(2)
 
         # 获取账号基本信息
         account_info = self._extract_account_info()
@@ -1439,6 +1460,7 @@ class Application(ttk.Window):
 
     def _run_account_analysis(self, url, max_scroll):
         try:
+            self.account_scraper.msg_queue = self.msg_queue
             account_info, videos = self.account_scraper.analyze(url, max_scroll)
             self.msg_queue.put({"type": "account_info", "data": account_info})
             for v in videos:
@@ -1456,6 +1478,8 @@ class Application(ttk.Window):
                 elif msg["type"] == "account_video":
                     self.account_results.append(msg["data"])
                     self._add_account_row(msg["data"], len(self.account_results))
+                elif msg["type"] == "account_log":
+                    self.lbl_account_status.config(text=msg["text"])
                 elif msg["type"] == "account_done":
                     self._on_account_complete()
                     return
