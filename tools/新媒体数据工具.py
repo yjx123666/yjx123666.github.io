@@ -631,7 +631,8 @@ class AccountScraper:
         self._wait_for_login = False
 
     def _init_driver(self):
-        # 关闭已有的 Edge 进程，避免配置文件锁定
+        """启动 Edge 浏览器"""
+        # 关闭已有 Edge 进程
         os.system("taskkill /f /im msedge.exe >nul 2>&1")
         time.sleep(1)
 
@@ -641,27 +642,62 @@ class AccountScraper:
         self.driver = webdriver.Edge(options=options)
 
     def _save_cookies(self):
+        """保存当前 cookies 到文件"""
         try:
             cookies = self.driver.get_cookies()
             with open(self.COOKIE_FILE, "w", encoding="utf-8") as f:
-                json.dump(cookies, f)
-        except Exception:
-            pass
+                json.dump(cookies, f, ensure_ascii=False)
+        except Exception as e:
+            print(f"保存 cookies 失败: {e}")
 
     def _load_cookies(self):
+        """从文件加载 cookies"""
         try:
             if not os.path.isfile(self.COOKIE_FILE):
                 return False
             with open(self.COOKIE_FILE, "r", encoding="utf-8") as f:
                 cookies = json.load(f)
+            if not cookies:
+                return False
+            # 先访问抖音设置域名
             self.driver.get("https://www.douyin.com")
             time.sleep(2)
+            # 清除旧 cookies
+            self.driver.delete_all_cookies()
+            # 添加保存的 cookies
             for cookie in cookies:
                 try:
-                    self.driver.add_cookie(cookie)
+                    # 移除可能导致问题的字段
+                    clean = {}
+                    for k in ['name', 'value', 'domain', 'path', 'secure', 'httpOnly', 'expiry']:
+                        if k in cookie:
+                            clean[k] = cookie[k]
+                    self.driver.add_cookie(clean)
                 except Exception:
                     pass
+            # 刷新页面使 cookies 生效
+            self.driver.refresh()
+            time.sleep(3)
             return True
+        except Exception:
+            return False
+
+    def _is_logged_in(self):
+        """检查是否已登录"""
+        try:
+            # 检查页面是否有登录按钮或用户头像
+            result = self.driver.execute_script("""
+            // 如果有登录按钮，说明未登录
+            var loginBtn = document.querySelector('[class*="login"], [data-e2e="login"]');
+            if (loginBtn && loginBtn.offsetParent !== null) return false;
+            // 如果有用户头像或"我的"链接，说明已登录
+            var userEl = document.querySelector('[class*="avatar"], [data-e2e="user-info"]');
+            if (userEl) return true;
+            // 检查是否在登录页
+            if (window.location.href.includes('login')) return false;
+            return true;
+            """)
+            return result
         except Exception:
             return False
 
@@ -673,42 +709,47 @@ class AccountScraper:
         """采集账号主页作品列表，返回 (账号信息, 作品列表)"""
         self._ensure_driver()
 
-        # 尝试加载已保存的 cookies
+        # 尝试加载 cookies
         has_cookies = self._load_cookies()
-        if has_cookies:
-            self.msg_queue.put({"type": "account_log", "text": "已加载保存的登录状态，直接采集..."})
+
+        if has_cookies and self._is_logged_in():
+            self.msg_queue.put({"type": "account_log", "text": "已加载保存的登录状态，开始采集..."})
         else:
-            self.msg_queue.put({"type": "account_log", "text": "首次使用，请在浏览器中登录抖音..."})
+            # 需要登录
             self.driver.get("https://www.douyin.com")
-            time.sleep(3)
-            # 等待用户登录
+            time.sleep(2)
+            self.msg_queue.put({"type": "account_log", "text": "请在浏览器中登录抖音，登录后点击「确认登录」"})
             self._wait_for_login = True
             while self._wait_for_login:
                 time.sleep(1)
-            # 保存 cookies 供下次使用
+            # 等待页面加载
+            time.sleep(3)
+            # 保存 cookies
             self._save_cookies()
             self.msg_queue.put({"type": "account_log", "text": "登录状态已保存，开始采集..."})
 
+        # 导航到目标主页
         self.driver.get(url)
-        time.sleep(4)
+        time.sleep(5)
 
-        # 获取账号基本信息
+        # 获取账号信息
         account_info = self._extract_account_info()
 
-        # 滚动加载更多作品
+        # 滚动加载作品
         videos = []
         seen_keys = set()
         no_new_count = 0
 
         for i in range(max_scroll):
+            self.msg_queue.put({"type": "account_log", "text": f"正在采集作品... 滚动 {i+1}/{max_scroll}，已获取 {len(videos)} 条"})
+
             new_videos = self._extract_video_list()
             added = 0
             for v in new_videos:
-                # 用 url + title + likes 组合做去重 key，避免误过滤
-                url = v.get("url", "")
-                title = v.get("title", "")
-                likes = v.get("likes", 0)
-                key = url or f"{title}_{likes}_{len(videos)}"
+                v_url = v.get("url", "")
+                v_title = v.get("title", "")
+                v_likes = v.get("likes", 0)
+                key = v_url or f"{v_title}_{v_likes}_{len(videos)}"
                 if key not in seen_keys:
                     seen_keys.add(key)
                     videos.append(v)
@@ -721,11 +762,11 @@ class AccountScraper:
             else:
                 no_new_count = 0
 
-            # 滚动到底部触发加载
+            # 滚动到底部
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
 
-            # 如果页面高度没变化，可能已到底部
+            # 检查是否到底
             last_height = self.driver.execute_script("return document.body.scrollHeight")
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(1)
@@ -736,24 +777,18 @@ class AccountScraper:
         return account_info, videos
 
     def _extract_account_info(self):
+        """提取账号基本信息"""
         try:
             info = self.driver.execute_script("""
             var result = {};
-
-            // 抖音账号信息
-            var nameEl = document.querySelector('[data-e2e="user-info"] .j5WZzJdp')
-                || document.querySelector('h1')
+            // 昵称
+            var nameEl = document.querySelector('h1')
                 || document.querySelector('[class*="nickname"]');
             result.name = nameEl ? nameEl.textContent.trim() : '';
-
-            var followerEl = document.querySelector('[data-e2e="user-info"] [class*="follower"]')
-                || document.querySelector('[class*="follower"] span');
-            result.followers = followerEl ? followerEl.textContent.trim() : '';
-
-            var descEl = document.querySelector('[data-e2e="user-info"] .dFTJrJMt')
-                || document.querySelector('[class*="desc"]');
-            result.description = descEl ? descEl.textContent.trim().substring(0, 200) : '';
-
+            // 粉丝数
+            var allText = document.body.innerText;
+            var followerMatch = allText.match(/(\\d[\\d.]*[万亿]?)\\s*粉丝/);
+            result.followers = followerMatch ? followerMatch[1] : '';
             return result;
             """)
             return info or {}
@@ -761,26 +796,32 @@ class AccountScraper:
             return {}
 
     def _extract_video_list(self):
+        """从页面提取作品列表"""
         try:
             videos = self.driver.execute_script("""
             var videos = [];
 
-            // 方案1: 从 RENDER_DATA 提取（最可靠）
+            // 数字解析（处理"万"、"亿"后缀）
+            function parseNum(text) {
+                if (!text) return 0;
+                text = text.trim().replace(/,/g, '');
+                if (text.endsWith('亿')) return Math.round(parseFloat(text) * 100000000);
+                if (text.endsWith('万') || text.endsWith('w') || text.endsWith('W'))
+                    return Math.round(parseFloat(text) * 10000);
+                return Math.round(parseFloat(text)) || 0;
+            }
+
+            // 从 RENDER_DATA 提取
             var rd = document.getElementById('RENDER_DATA');
             if (rd) {
                 try {
-                    var rawData = rd.textContent;
-                    var data = JSON.parse(decodeURIComponent(rawData));
-
-                    // 递归查找包含 aweme_id 的数组
+                    var data = JSON.parse(decodeURIComponent(rd.textContent));
                     function findAwemeList(obj, depth) {
                         if (depth > 10 || !obj || typeof obj !== 'object') return null;
-                        if (Array.isArray(obj)) {
-                            for (var i = 0; i < obj.length; i++) {
-                                var item = obj[i];
-                                if (item && (item.aweme_id || item.awemeId) && (item.desc !== undefined || item.statistics)) {
-                                    return obj;
-                                }
+                        if (Array.isArray(obj) && obj.length > 0) {
+                            var first = obj[0];
+                            if (first && (first.aweme_id || first.awemeId) && (first.desc !== undefined || first.statistics)) {
+                                return obj;
                             }
                         }
                         for (var k in obj) {
@@ -789,16 +830,13 @@ class AccountScraper:
                         }
                         return null;
                     }
-
                     var awemeList = findAwemeList(data, 0);
                     if (awemeList) {
                         for (var i = 0; i < awemeList.length; i++) {
                             var item = awemeList[i];
                             var stats = item.statistics || item.stats || {};
-                            var author = item.author || {};
                             videos.push({
                                 title: (item.desc || '').substring(0, 100),
-                                author: author.nickname || author.nick_name || '',
                                 likes: parseInt(stats.digg_count || stats.diggCount || 0),
                                 comments: parseInt(stats.comment_count || stats.commentCount || 0),
                                 collects: parseInt(stats.collect_count || stats.collectCount || 0),
@@ -810,41 +848,21 @@ class AccountScraper:
                 } catch(e) {}
             }
 
-            // 方案2: 从 DOM 提取（兜底）
+            // DOM 提取兜底
             if (videos.length === 0) {
-                // 数字解析函数（处理"万"、"亿"等中文后缀）
-                function parseNum(text) {
-                    if (!text) return 0;
-                    text = text.trim().replace(/,/g, '');
-                    var multipliers = {'w': 10000, 'W': 10000, '万': 10000, '亿': 100000000};
-                    for (var suffix in multipliers) {
-                        if (text.endsWith(suffix)) {
-                            var n = parseFloat(text.slice(0, -1));
-                            return isNaN(n) ? 0 : Math.round(n * multipliers[suffix]);
-                        }
-                    }
-                    var n2 = parseFloat(text);
-                    return isNaN(n2) ? 0 : Math.round(n2);
-                }
-
                 var links = document.querySelectorAll('a[href*="/video/"], a[href*="/note/"]');
                 var seen = new Set();
                 links.forEach(function(a) {
                     var href = a.href;
                     if (seen.has(href)) return;
                     seen.add(href);
-
-                    var card = a.closest('li') || a.closest('[class*="item"]') || a;
-                    var titleEl = card.querySelector('p span') || card.querySelector('p') || card.querySelector('[class*="title"]');
-                    var numEls = card.querySelectorAll('span');
+                    var card = a.closest('li') || a;
+                    var titleEl = card.querySelector('p span') || card.querySelector('p');
                     var nums = [];
-                    numEls.forEach(function(el) {
+                    card.querySelectorAll('span').forEach(function(el) {
                         var t = el.textContent.trim();
-                        if (/^[\\d.]+[万亿wW]?,?[\\d.]*$/.test(t) && t.length < 12) {
-                            nums.push(t);
-                        }
+                        if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 12) nums.push(t);
                     });
-
                     videos.push({
                         title: titleEl ? titleEl.textContent.trim().substring(0, 100) : '',
                         url: href,
