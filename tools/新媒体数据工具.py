@@ -638,6 +638,13 @@ class AccountScraper:
         options.add_argument("--no-sandbox")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--log-level=3")
+
+        # 复用用户已登录的 Edge 配置（保留 cookies，免登录）
+        user_data = os.path.expanduser("~") + r"\AppData\Local\Microsoft\Edge\User Data"
+        if os.path.isdir(user_data):
+            options.add_argument(f"--user-data-dir={user_data}")
+            options.add_argument("--profile-directory=Default")
+
         options.add_argument(
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -652,21 +659,11 @@ class AccountScraper:
         if self.driver is None:
             self._init_driver()
 
-    def analyze(self, url, max_scroll=30, wait_login=True):
+    def analyze(self, url, max_scroll=30):
         """采集账号主页作品列表，返回 (账号信息, 作品列表)"""
         self._ensure_driver()
         self.driver.get(url)
         time.sleep(3)
-
-        # 等待用户手动登录
-        if wait_login:
-            self.msg_queue.put({"type": "account_log", "text": "请在浏览器中登录抖音，登录后回到工具点击「确认登录」按钮"})
-            # 持续等待，直到用户在工具界面点击确认
-            self._wait_for_login = True
-            while self._wait_for_login:
-                time.sleep(1)
-            self.msg_queue.put({"type": "account_log", "text": "开始采集..."})
-            time.sleep(2)
 
         # 获取账号基本信息
         account_info = self._extract_account_info()
@@ -1073,17 +1070,10 @@ class Application(ttk.Window):
                                              bootstyle="success", width=10)
         self.btn_account_start.pack(side=LEFT)
 
-        # 状态栏 + 确认登录按钮
-        frm_status = ttk.Frame(parent)
-        frm_status.pack(fill=X, padx=8, pady=(2, 2))
-
-        self.lbl_account_status = ttk.Label(frm_status, text="输入账号主页链接，点击开始分析",
+        # 状态栏
+        self.lbl_account_status = ttk.Label(parent, text="输入账号主页链接，点击开始分析（自动使用已登录的 Edge 浏览器）",
                                              font=("Microsoft YaHei UI", 9), bootstyle="secondary")
-        self.lbl_account_status.pack(side=LEFT)
-
-        self.btn_confirm_login = ttk.Button(frm_status, text="  确认登录  ", command=self._confirm_login,
-                                             bootstyle="warning", width=12, state=tk.DISABLED)
-        self.btn_confirm_login.pack(side=RIGHT)
+        self.lbl_account_status.pack(padx=8, anchor=W, pady=(2, 2))
 
         # 账号信息 + 数据统计（水平排列）
         frm_top_row = ttk.Frame(parent)
@@ -1452,16 +1442,9 @@ class Application(ttk.Window):
         self._set_text(self.txt_account_stats, "")
 
         self.account_scraper = AccountScraper(headless=False)
-        self.btn_confirm_login.config(state=tk.NORMAL)
         thread = threading.Thread(target=self._run_account_analysis, args=(url, max_scroll), daemon=True)
         thread.start()
         self._poll_account_queue()
-
-    def _confirm_login(self):
-        if hasattr(self, 'account_scraper') and self.account_scraper:
-            self.account_scraper._wait_for_login = False
-            self.btn_confirm_login.config(state=tk.DISABLED)
-            self.lbl_account_status.config(text="已确认，开始采集...")
 
     def _run_account_analysis(self, url, max_scroll):
         try:
@@ -1491,7 +1474,6 @@ class Application(ttk.Window):
                 elif msg["type"] == "account_error":
                     self.lbl_account_status.config(text="采集失败: " + msg["text"])
                     self.btn_account_start.config(state=tk.NORMAL)
-                    self.btn_confirm_login.config(state=tk.DISABLED)
                     if hasattr(self, 'account_scraper'):
                         self.account_scraper.close()
                     return
@@ -1508,7 +1490,6 @@ class Application(ttk.Window):
 
     def _on_account_complete(self):
         self.btn_account_start.config(state=tk.NORMAL)
-        self.btn_confirm_login.config(state=tk.DISABLED)
         if hasattr(self, 'account_scraper'):
             self.account_scraper.close()
 
