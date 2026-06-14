@@ -1088,40 +1088,60 @@ class Application(ttk.Window):
         self.lbl_count.pack(side=RIGHT)
 
     # --------------------------------------------------
-    # Tab 2: 账号分析（新功能）
+    # Tab 2: 账号分析（手动粘贴数据）
     # --------------------------------------------------
     def _build_account_tab(self, parent):
+        # 使用说明
+        frm_hint = ttk.LabelFrame(parent, text=" 使用方法 ")
+        frm_hint.pack(fill=X, padx=8, pady=(8, 4))
+        hint_text = (
+            "1. 在浏览器中打开抖音账号主页，登录后按 F12 打开开发者工具\n"
+            "2. 切换到 Console（控制台），粘贴下方代码并回车，复制输出的 JSON\n"
+            "3. 将 JSON 粘贴到下方输入框，点击「解析数据」"
+        )
+        ttk.Label(frm_hint, text=hint_text, font=("Microsoft YaHei UI", 9),
+                  bootstyle="secondary", wraplength=600).pack(padx=8, pady=6, anchor=W)
+
+        # 控制台代码
+        frm_code = ttk.LabelFrame(parent, text=" 复制这段代码到浏览器控制台（F12 → Console）")
+        frm_code.pack(fill=X, padx=8, pady=(0, 4))
+
+        code_text = (
+            'var d=JSON.parse(decodeURIComponent(document.getElementById("RENDER_DATA").textContent));'
+            'var r=[];function f(o,d){if(d>10||!o||typeof o!="object")return;'
+            'if(Array.isArray(o)&&o.length>0&&o[0]&&(o[0].aweme_id||o[0].awemeId)){'
+            'o.forEach(i=>{var s=i.statistics||i.stats||{};r.push({title:(i.desc||"").slice(0,100),'
+            'likes:s.digg_count||0,comments:s.comment_count||0,collects:s.collect_count||0,'
+            'shares:s.share_count||0,views:s.play_count||0})});return;}'
+            'for(var k in o)f(o[k],d+1)}f(d,0);copy(JSON.stringify(r));console.log("已复制 "+r.length+" 条数据");'
+        )
+        txt_code = tk.Text(frm_code, height=4, wrap=tk.WORD, font=("Consolas", 9),
+                           relief=FLAT, padx=8, pady=6, bg="#1e1e2e", fg="#a6e3a1")
+        txt_code.pack(fill=X)
+        txt_code.insert("1.0", code_text)
+        txt_code.config(state=tk.DISABLED)
+
         # 输入区
-        frm_input = ttk.LabelFrame(parent, text=" 输入账号主页链接（抖音）")
-        frm_input.pack(fill=X, padx=8, pady=(8, 6))
+        frm_input = ttk.LabelFrame(parent, text=" 粘贴从浏览器复制的 JSON 数据 ")
+        frm_input.pack(fill=X, padx=8, pady=(0, 4))
 
-        frm_row = ttk.Frame(frm_input, padding=6)
-        frm_row.pack(fill=X)
+        self.txt_account_json = tk.Text(frm_input, height=4, wrap=tk.WORD, font=("Consolas", 9),
+                                         relief=FLAT, padx=8, pady=6)
+        self.txt_account_json.pack(fill=X, side=LEFT, expand=True)
+        json_scroll = ttk.Scrollbar(frm_input, command=self.txt_account_json.yview)
+        json_scroll.pack(side=RIGHT, fill=Y)
+        self.txt_account_json.config(yscrollcommand=json_scroll.set)
 
-        self.txt_account_url = tk.Entry(frm_row, font=("Microsoft YaHei UI", 10))
-        self.txt_account_url.pack(side=LEFT, fill=X, expand=True, padx=(0, 8))
-        self.txt_account_url.insert(0, "")
+        # 解析按钮
+        frm_btns = ttk.Frame(parent, padding=(8, 0))
+        frm_btns.pack(fill=X, pady=(0, 4))
 
-        ttk.Label(frm_row, text="滚动次数:", font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 4))
-        self.scroll_count_var = tk.StringVar(value="20")
-        ttk.Combobox(frm_row, textvariable=self.scroll_count_var,
-                     values=["10", "20", "30", "50"], width=5, font=("Microsoft YaHei UI", 9)).pack(side=LEFT, padx=(0, 8))
+        ttk.Button(frm_btns, text="  解析数据", command=self._parse_account_json,
+                   bootstyle="success", width=12).pack(side=LEFT, padx=(0, 8))
 
-        self.btn_account_start = ttk.Button(frm_row, text="  开始分析", command=self.start_account_analysis,
-                                             bootstyle="success", width=10)
-        self.btn_account_start.pack(side=LEFT)
-
-        # 状态栏 + 确认登录按钮
-        frm_status = ttk.Frame(parent)
-        frm_status.pack(fill=X, padx=8, pady=(4, 2))
-
-        self.lbl_account_status = ttk.Label(frm_status, text="输入账号主页链接，点击开始分析（首次需在弹出浏览器中登录）",
+        self.lbl_account_status = ttk.Label(frm_btns, text="粘贴 JSON 数据后点击解析",
                                              font=("Microsoft YaHei UI", 9), bootstyle="secondary")
         self.lbl_account_status.pack(side=LEFT)
-
-        self.btn_confirm_login = ttk.Button(frm_status, text="  确认登录  ", command=self._confirm_login,
-                                             bootstyle="warning", width=10, state=tk.DISABLED)
-        self.btn_confirm_login.pack(side=RIGHT)
 
         # 账号信息 + 数据统计（水平排列）
         frm_top_row = ttk.Frame(parent)
@@ -1470,18 +1490,25 @@ class Application(ttk.Window):
         finally:
             scraper.close()
 
-    # ------ 账号分析 ------
+    # ------ 账号分析（手动粘贴） ------
 
-    def start_account_analysis(self):
-        url = self.txt_account_url.get().strip()
-        if not url:
-            messagebox.showwarning("提示", "请输入账号主页链接！")
+    def _parse_account_json(self):
+        raw = self.txt_account_json.get("1.0", tk.END).strip()
+        if not raw:
+            messagebox.showwarning("提示", "请先粘贴 JSON 数据！")
             return
 
-        max_scroll = int(self.scroll_count_var.get())
-        self.account_results = []
-        self.btn_account_start.config(state=tk.DISABLED)
-        self.lbl_account_status.config(text="采集中，请稍候（可能需要 1-2 分钟）...")
+        try:
+            videos = json.loads(raw)
+        except json.JSONDecodeError as e:
+            messagebox.showerror("解析失败", f"JSON 格式错误：\n{e}")
+            return
+
+        if not isinstance(videos, list):
+            messagebox.showerror("解析失败", "数据格式不正确，需要是数组")
+            return
+
+        self.account_results = videos
 
         # 清空旧数据
         for item in self.tree_account.get_children():
@@ -1489,75 +1516,15 @@ class Application(ttk.Window):
         self._set_text(self.lbl_account_info, "")
         self._set_text(self.txt_account_stats, "")
 
-        self.account_scraper = AccountScraper(headless=False)
-        self.btn_confirm_login.config(state=tk.NORMAL)
-        thread = threading.Thread(target=self._run_account_analysis, args=(url, max_scroll), daemon=True)
-        thread.start()
-        self._poll_account_queue()
+        # 按点赞排序
+        videos.sort(key=lambda x: x.get("likes", 0), reverse=True)
 
-    def _confirm_login(self):
-        if hasattr(self, 'account_scraper') and self.account_scraper:
-            self.account_scraper._wait_for_login = False
-            self.btn_confirm_login.config(state=tk.DISABLED)
+        # 填充表格
+        for i, v in enumerate(videos, 1):
+            self._add_account_row(v, i)
 
-    def _run_account_analysis(self, url, max_scroll):
-        try:
-            self.account_scraper.msg_queue = self.msg_queue
-            account_info, videos = self.account_scraper.analyze(url, max_scroll)
-            self.msg_queue.put({"type": "account_info", "data": account_info})
-            for v in videos:
-                self.msg_queue.put({"type": "account_video", "data": v})
-            self.msg_queue.put({"type": "account_done"})
-        except Exception as e:
-            self.msg_queue.put({"type": "account_error", "text": str(e)})
-
-    def _poll_account_queue(self):
-        try:
-            while True:
-                msg = self.msg_queue.get_nowait()
-                if msg["type"] == "account_info":
-                    self._display_account_info(msg["data"])
-                elif msg["type"] == "account_video":
-                    self.account_results.append(msg["data"])
-                    self._add_account_row(msg["data"], len(self.account_results))
-                elif msg["type"] == "account_log":
-                    self.lbl_account_status.config(text=msg["text"])
-                elif msg["type"] == "account_done":
-                    self._on_account_complete()
-                    return
-                elif msg["type"] == "account_error":
-                    self.lbl_account_status.config(text="采集失败: " + msg["text"])
-                    self.btn_account_start.config(state=tk.NORMAL)
-                    self.btn_confirm_login.config(state=tk.DISABLED)
-                    # 不自动关闭浏览器
-                    return
-        except queue.Empty:
-            pass
-        self.after(100, self._poll_account_queue)
-
-    def _display_account_info(self, info):
-        name = info.get("name", "未知")
-        followers = info.get("followers", "未知")
-        desc = info.get("description", "")
-        text = f"账号: {name}    粉丝: {followers}\n简介: {desc}" if desc else f"账号: {name}    粉丝: {followers}"
-        self._set_text(self.lbl_account_info, text)
-
-    def _on_account_complete(self):
-        self.btn_account_start.config(state=tk.NORMAL)
-        self.btn_confirm_login.config(state=tk.DISABLED)
-        # 不自动关闭浏览器，由用户手动关闭
-
-        count = len(self.account_results)
-        self.lbl_account_status.config(text=f"采集完成，共 {count} 条作品")
-
-        if count > 0:
-            # 按点赞排序后重新填充表格
-            self.account_results.sort(key=lambda x: x.get("likes", 0), reverse=True)
-            for item in self.tree_account.get_children():
-                self.tree_account.delete(item)
-            for i, v in enumerate(self.account_results, 1):
-                self._add_account_row(v, i)
-            self._display_account_stats()
+        self.lbl_account_status.config(text=f"解析完成，共 {len(videos)} 条作品")
+        self._display_account_stats()
 
     def _display_account_stats(self):
         videos = self.account_results
