@@ -233,16 +233,20 @@ class DouyinScraper:
             js_result = self.driver.execute_script("""
             var result = {};
 
-            // 标题: 尝试多种选择器
+            // ===== 标题 =====
             var titleEl = document.querySelector('[data-e2e="video-desc"] span')
                 || document.querySelector('[data-e2e="video-desc"]')
                 || document.querySelector('h1')
-                || document.querySelector('.video-info-detail');
-            result.title = titleEl ? titleEl.textContent.trim() : document.title;
+                || document.querySelector('.video-info-detail')
+                || document.querySelector('[class*="title"][class*="video"]')
+                || document.querySelector('[class*="desc"]');
+            result.title = titleEl ? titleEl.textContent.trim().substring(0, 200) : document.title;
 
-            // 作者
+            // ===== 作者 =====
             var authorEl = document.querySelector('[data-e2e="user-info"]')
-                || document.querySelector('[data-e2e="video-author-name"]');
+                || document.querySelector('[data-e2e="video-author-name"]')
+                || document.querySelector('[class*="author"] [class*="name"]')
+                || document.querySelector('[class*="nickname"]');
             if (authorEl) {
                 var authorText = authorEl.textContent.trim();
                 var match = authorText.match(/^(.+?)粉丝/);
@@ -251,42 +255,64 @@ class DouyinScraper:
                 result.author = '';
             }
 
-            // 互动数据 - 右侧竖排图标下方的数字
-            // 抖音视频页右侧有4个图标：点赞、评论、收藏、转发
-            var actionItems = document.querySelectorAll('[class*="action"] [class*="count"], [class*="ActionBar"] span, [class*="toolbar"] span');
-            var numbers = [];
-            for (var i = 0; i < actionItems.length; i++) {
-                var text = actionItems[i].textContent.trim();
-                if (/^[\\d.]+[万亿wW]?$/.test(text)) {
-                    numbers.push(text);
-                }
-            }
-            result.numbers = numbers;
+            // ===== 互动数据 - 多种策略 =====
 
-            // 备选：查找所有 data-e2e 属性
+            // 策略1: data-e2e 属性
             var e2e_map = {};
-            var allE2e = document.querySelectorAll('[data-e2e]');
-            for (var j = 0; j < allE2e.length; j++) {
-                var attr = allE2e[j].getAttribute('data-e2e');
-                var text = allE2e[j].textContent.trim();
-                if (text && text.length < 20) {
-                    e2e_map[attr] = text;
-                }
-            }
+            document.querySelectorAll('[data-e2e]').forEach(function(el) {
+                var key = el.getAttribute('data-e2e');
+                var text = el.textContent.trim().substring(0, 30);
+                if (text) e2e_map[key] = text;
+            });
             result.e2e = e2e_map;
 
-            // 查找页面上所有数字文本（备选）
+            // 策略2: aria-label 属性（抖音常用）
+            var aria_map = {};
+            document.querySelectorAll('[aria-label]').forEach(function(el) {
+                var label = el.getAttribute('aria-label');
+                var text = el.textContent.trim();
+                if (label && text && text.length < 15) {
+                    aria_map[label] = text;
+                }
+            });
+            result.aria = aria_map;
+
+            // 策略3: 查找 SVG 图标旁边的数字
+            // 抖音右侧互动栏：每个图标 + 数字是一个组合
+            var svgParents = document.querySelectorAll('svg');
+            var svg_nums = [];
+            svgParents.forEach(function(svg) {
+                var parent = svg.closest('[class*="item"], [class*="action"], [class*="wrapper"], [class*="container"], li, button');
+                if (parent) {
+                    var numEl = parent.querySelector('span:not(:first-child)');
+                    if (numEl) {
+                        var t = numEl.textContent.trim();
+                        if (/^[\\d.]+[万亿wW]?$/.test(t)) {
+                            // 尝试通过 aria-label 或 class 判断类型
+                            var label = parent.getAttribute('aria-label') || '';
+                            var cls = (parent.className || '').substring(0, 80);
+                            svg_nums.push({text: t, label: label, class: cls});
+                        }
+                    }
+                }
+            });
+            result.svgNums = svg_nums.slice(0, 10);
+
+            // 策略4: 查找所有数字 span（通用兜底）
             var allSpans = document.querySelectorAll('span');
             var allNums = [];
-            for (var k = 0; k < allSpans.length; k++) {
-                var t = allSpans[k].textContent.trim();
+            allSpans.forEach(function(el) {
+                var t = el.textContent.trim();
                 if (/^[\\d.]+[万亿wW]?$/.test(t) && t.length < 10) {
-                    var parent = allSpans[k].parentElement;
-                    var parentClass = parent ? parent.className : '';
-                    allNums.push({text: t, parentClass: parentClass});
+                    var parent = el.parentElement;
+                    var grandparent = parent ? parent.parentElement : null;
+                    var cls = (parent ? parent.className : '').substring(0, 60);
+                    var gpcls = (grandparent ? grandparent.className : '').substring(0, 60);
+                    var aria = el.getAttribute('aria-label') || parent ? (parent.getAttribute('aria-label') || '') : '';
+                    allNums.push({text: t, class: cls, gpClass: gpcls, aria: aria});
                 }
-            }
-            result.allNums = allNums.slice(0, 20);
+            });
+            result.allNums = allNums.slice(0, 30);
 
             return result;
             """)
@@ -294,18 +320,23 @@ class DouyinScraper:
             result["title"] = js_result.get("title", "")
             result["author"] = js_result.get("author", "")
 
-            # 从 data-e2e 属性提取（值可能是字符串或列表）
+            # ===== 从各种来源提取数据 =====
             e2e = js_result.get("e2e", {})
+            aria = js_result.get("aria", {})
+            svg_nums = js_result.get("svgNums", [])
+            all_nums = js_result.get("allNums", [])
+
+            # 来源1: data-e2e
             def _get_e2e_val(key):
                 val = e2e.get(key)
                 if isinstance(val, list):
                     return val[0] if val else None
                 return val
 
-            e2e_likes = _get_e2e_val("video-player-digg")
-            e2e_comments = _get_e2e_val("feed-comment-icon")
-            e2e_collects = _get_e2e_val("video-player-collect")
-            e2e_shares = _get_e2e_val("video-player-share")
+            e2e_likes = _get_e2e_val("video-player-digg") or _get_e2e_val("like-icon")
+            e2e_comments = _get_e2e_val("feed-comment-icon") or _get_e2e_val("comment-icon")
+            e2e_collects = _get_e2e_val("video-player-collect") or _get_e2e_val("collect-icon")
+            e2e_shares = _get_e2e_val("video-player-share") or _get_e2e_val("share-icon")
 
             if e2e_likes:
                 result["likes"] = self._parse_number(e2e_likes)
@@ -316,13 +347,36 @@ class DouyinScraper:
             if e2e_shares:
                 result["shares"] = self._parse_number(e2e_shares)
 
-            # 如果 e2e 没拿到，用位置推断
-            numbers = js_result.get("numbers", [])
-            if not e2e_likes and len(numbers) >= 4:
-                result["likes"] = self._parse_number(numbers[0])
-                result["comments"] = self._parse_number(numbers[1])
-                result["collects"] = self._parse_number(numbers[2])
-                result["shares"] = self._parse_number(numbers[3])
+            # 来源2: aria-label（包含"点赞"、"评论"等关键词）
+            if not result.get("likes"):
+                for label, val in aria.items():
+                    if "赞" in label or "like" in label.lower() or "digg" in label.lower():
+                        result["likes"] = self._parse_number(val)
+                    elif "评论" in label or "comment" in label.lower():
+                        result["comments"] = self._parse_number(val)
+                    elif "收藏" in label or "collect" in label.lower() or "save" in label.lower():
+                        result["collects"] = self._parse_number(val)
+                    elif "分享" in label or "share" in label.lower() or "转发" in label:
+                        result["shares"] = self._parse_number(val)
+
+            # 来源3: SVG 图标旁边的数字（按位置推断，通常是 点赞/评论/收藏/转发）
+            if not result.get("likes") and len(svg_nums) >= 3:
+                result["likes"] = self._parse_number(svg_nums[0]["text"])
+                result["comments"] = self._parse_number(svg_nums[1]["text"])
+                result["collects"] = self._parse_number(svg_nums[2]["text"])
+                if len(svg_nums) >= 4:
+                    result["shares"] = self._parse_number(svg_nums[3]["text"])
+
+            # 来源4: 通用数字兜底（从 allNums 中按位置推断）
+            if not result.get("likes"):
+                # 过滤出互动栏的数字（通常在页面右侧，连续出现）
+                nums_only = [n["text"] for n in all_nums if self._parse_number(n["text"]) > 0]
+                if len(nums_only) >= 3:
+                    result["likes"] = self._parse_number(nums_only[0])
+                    result["comments"] = self._parse_number(nums_only[1])
+                    result["collects"] = self._parse_number(nums_only[2])
+                    if len(nums_only) >= 4:
+                        result["shares"] = self._parse_number(nums_only[3])
 
         except Exception as e:
             result["error"] = str(e)
