@@ -1495,6 +1495,10 @@ class Application(ttk.Window):
             messagebox.showwarning("提示", "请输入账号主页链接！")
             return
 
+        # 自动修正：如果不是完整 URL，当成抖音号搜索
+        if not url.startswith("http"):
+            url = f"https://www.douyin.com/search/{url}?type=user"
+
         max_scroll = int(self.scroll_count_var.get())
         self.account_results = []
         self.btn_account_start.config(state=tk.DISABLED)
