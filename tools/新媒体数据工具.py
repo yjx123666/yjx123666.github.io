@@ -631,23 +631,13 @@ class AccountScraper:
         self._wait_for_login = False
 
     def _init_driver(self):
-        import tempfile
         options = Options()
-        # 使用独立的临时配置文件，避免与用户 Edge 冲突
-        profile_dir = tempfile.mkdtemp(prefix="edge_scrape_")
-        options.add_argument(f"--user-data-dir={profile_dir}")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--log-level=3")
-        options.add_argument("--no-first-run")
-        options.add_argument("--no-default-browser-check")
-        options.add_argument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
         self.driver = webdriver.Edge(options=options)
         self.driver.execute_cdp_cmd(
             "Page.addScriptToEvaluateOnNewDocument",
