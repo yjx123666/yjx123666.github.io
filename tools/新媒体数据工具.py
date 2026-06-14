@@ -644,7 +644,32 @@ class AccountScraper:
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
-        self.driver = webdriver.Edge(options=options)
+
+        # 尝试连接已打开的 Edge 浏览器（需先以调试模式启动）
+        try:
+            options.debugger_address = "127.0.0.1:9222"
+            self.driver = webdriver.Edge(options=options)
+            # 测试连接是否成功
+            self.driver.title
+            return
+        except Exception:
+            pass
+
+        # 连接失败，用新实例 + cookie 文件
+        options2 = Options()
+        if self.headless:
+            options2.add_argument("--headless=new")
+        options2.add_argument("--disable-blink-features=AutomationControlled")
+        options2.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options2.add_argument("--disable-gpu")
+        options2.add_argument("--no-sandbox")
+        options2.add_argument("--window-size=1920,1080")
+        options2.add_argument("--log-level=3")
+        options2.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        self.driver = webdriver.Edge(options=options2)
         self.driver.execute_cdp_cmd(
             "Page.addScriptToEvaluateOnNewDocument",
             {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
@@ -1107,7 +1132,17 @@ class Application(ttk.Window):
                                              bootstyle="success", width=10)
         self.btn_account_start.pack(side=LEFT)
 
-        # 状态栏 + 确认登录按钮
+        # 使用说明
+        frm_hint = ttk.LabelFrame(parent, text=" 使用说明 ")
+        frm_hint.pack(fill=X, padx=8, pady=(4, 2))
+        hint_text = (
+            "方式一（推荐）：先关闭 Edge，用「启动调试浏览器」按钮打开，登录抖音后采集\n"
+            "方式二：直接点开始分析，在弹出的浏览器中登录，登录后点「确认登录」"
+        )
+        ttk.Label(frm_hint, text=hint_text, font=("Microsoft YaHei UI", 9),
+                  bootstyle="secondary", wraplength=600).pack(padx=8, pady=6, anchor=W)
+
+        # 状态栏 + 按钮
         frm_status = ttk.Frame(parent)
         frm_status.pack(fill=X, padx=8, pady=(2, 2))
 
@@ -1115,9 +1150,14 @@ class Application(ttk.Window):
                                              font=("Microsoft YaHei UI", 9), bootstyle="secondary")
         self.lbl_account_status.pack(side=LEFT)
 
+        self.btn_start_debug_edge = ttk.Button(frm_status, text="  启动调试浏览器  ",
+                                                command=self._start_debug_edge,
+                                                bootstyle="info", width=15)
+        self.btn_start_debug_edge.pack(side=RIGHT, padx=(0, 4))
+
         self.btn_confirm_login = ttk.Button(frm_status, text="  确认登录  ", command=self._confirm_login,
-                                             bootstyle="warning", width=12, state=tk.DISABLED)
-        self.btn_confirm_login.pack(side=RIGHT)
+                                             bootstyle="warning", width=10, state=tk.DISABLED)
+        self.btn_confirm_login.pack(side=RIGHT, padx=(0, 4))
 
         # 账号信息 + 数据统计（水平排列）
         frm_top_row = ttk.Frame(parent)
@@ -1490,6 +1530,19 @@ class Application(ttk.Window):
         thread = threading.Thread(target=self._run_account_analysis, args=(url, max_scroll), daemon=True)
         thread.start()
         self._poll_account_queue()
+
+    def _start_debug_edge(self):
+        """以调试模式启动 Edge，让用户登录后可直接复用"""
+        import subprocess
+        # 先关闭所有 Edge 进程
+        os.system("taskkill /f /im msedge.exe >nul 2>&1")
+        time.sleep(1)
+        # 以调试模式启动
+        edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+        if not os.path.isfile(edge_path):
+            edge_path = r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+        subprocess.Popen([edge_path, "--remote-debugging-port=9222", "https://www.douyin.com"])
+        self.lbl_account_status.config(text="Edge 已启动，请在浏览器中登录抖音，登录后回来点「开始分析」")
 
     def _confirm_login(self):
         if hasattr(self, 'account_scraper') and self.account_scraper:
