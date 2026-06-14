@@ -732,28 +732,28 @@ class AccountScraper:
         self.driver.get(url)
         time.sleep(4)
 
-        # 如果是搜索页，需要点击第一个用户进入主页
+        # 如果是搜索页，提取第一个用户主页 URL 并直接跳转
         if "search" in url:
-            self.msg_queue.put({"type": "account_log", "text": "正在进入用户主页..."})
+            self.msg_queue.put({"type": "account_log", "text": "正在查找用户主页..."})
             try:
-                # 等待搜索结果加载
                 time.sleep(2)
-                # 点击第一个用户链接
-                clicked = self.driver.execute_script("""
+                profile_url = self.driver.execute_script("""
                 var links = document.querySelectorAll('a[href*="/user/"]');
                 for (var i = 0; i < links.length; i++) {
                     var href = links[i].href;
                     if (href.includes('/user/') && !href.includes('self')) {
-                        links[i].click();
-                        return true;
+                        return href.split('?')[0];  // 去掉查询参数
                     }
                 }
-                return false;
+                return null;
                 """)
-                if clicked:
-                    time.sleep(4)
+                if profile_url:
+                    self.msg_queue.put({"type": "account_log", "text": f"找到用户主页，正在跳转..."})
+                    self.driver.get(profile_url)
+                    time.sleep(5)
                 else:
-                    self.msg_queue.put({"type": "account_log", "text": "未找到用户，请检查输入"})
+                    self.msg_queue.put({"type": "account_log", "text": "未找到用户，请检查输入或直接粘贴主页链接"})
+                    return {}, []
             except Exception:
                 pass
 
