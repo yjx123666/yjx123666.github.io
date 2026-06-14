@@ -128,86 +128,6 @@
     50% { text-shadow: 0 0 20px rgba(212,160,83,0.9), 0 0 40px rgba(212,160,83,0.3); }
   }
 
-  /* Music button */
-  .music-btn {
-    position: fixed; bottom: 20px; left: 20px; z-index: 999;
-    width: 40px; height: 40px; border-radius: 50%;
-    background: var(--slate); border: 1px solid var(--ridge);
-    color: var(--amber); font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.3s;
-  }
-  .music-btn:hover { border-color: var(--amber); }
-  .music-btn.playing { animation: pulse 2s infinite; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(212,160,83,0.3); }
-    50% { box-shadow: 0 0 0 8px rgba(212,160,83,0); }
-  }
-
-  /* Music panel */
-  .music-panel {
-    position: fixed; bottom: 72px; left: 20px; z-index: 998;
-    background: var(--slate); border: 1px solid var(--ridge);
-    border-radius: 4px; padding: 20px; width: 300px;
-    display: none; box-shadow: 0 8px 32px var(--shadow);
-  }
-  .music-panel.show { display: block; animation: slideUp 0.3s ease; }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .music-panel h3 {
-    color: var(--amber); font-size: 14px; margin-bottom: 14px;
-    font-family: 'Noto Serif SC', Georgia, serif;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .music-panel .music-option {
-    margin-bottom: 10px; padding: 10px;
-    background: var(--ink); border-radius: 2px;
-    border: 1px solid var(--ridge);
-  }
-  .music-panel .music-option label {
-    display: block; color: var(--fog); font-size: 11px; margin-bottom: 6px;
-  }
-  .music-panel input[type="text"],
-  .music-panel input[type="file"] {
-    width: 100%; padding: 7px 10px; background: var(--slate);
-    border: 1px solid var(--ridge); border-radius: 2px;
-    color: var(--ash); font-size: 12px; outline: none;
-  }
-  .music-panel input[type="text"]:focus { border-color: var(--amber); }
-  .music-panel .btn-row { display: flex; gap: 8px; margin-top: 10px; }
-  .music-panel .btn {
-    flex: 1; padding: 7px; border: none; border-radius: 2px;
-    font-size: 12px; cursor: pointer; transition: all 0.2s;
-  }
-  .music-panel .btn-primary {
-    background: var(--amber); color: var(--ink); font-weight: 700;
-  }
-  .music-panel .btn-primary:hover { background: #e0ac5f; }
-  .music-panel .btn-secondary {
-    background: var(--ridge); color: var(--fog);
-  }
-  .music-panel .btn-secondary:hover { background: #243040; }
-  .music-panel .music-list { margin-top: 10px; max-height: 140px; overflow-y: auto; }
-  .music-panel .music-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 10px; background: var(--ink); border-radius: 2px;
-    margin-bottom: 4px; border: 1px solid var(--ridge);
-  }
-  .music-panel .music-item.active { border-color: var(--amber); }
-  .music-panel .music-item-name {
-    font-size: 12px; color: var(--ash); flex: 1; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap;
-  }
-  .music-panel .music-item-btn {
-    background: none; border: none; color: var(--fog); cursor: pointer;
-    font-size: 14px; padding: 0 4px;
-  }
-  .music-panel .music-item-btn:hover { color: var(--amber); }
-  .music-panel .music-item-btn.delete { color: #c0504d; }
-  .music-panel .music-item-btn.delete:hover { color: #e05050; }
-
   .edit-hint {
     position: fixed; bottom: 20px; right: 20px; z-index: 999;
     background: var(--slate); border: 1px solid var(--ridge);
@@ -245,36 +165,6 @@
 <body>
 
 <canvas id="particles"></canvas>
-
-<button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
-<button class="music-btn" id="musicSettingsBtn" onclick="toggleMusicPanel()" title="音乐设置" style="bottom: 70px; left: 20px; font-size: 14px;">⚙</button>
-
-<div class="music-panel" id="musicPanel">
-  <h3>🎵 背景音乐设置</h3>
-
-  <div class="music-option">
-    <label>添加在线音乐（输入链接）</label>
-    <input type="text" id="musicUrlInput" placeholder="输入音乐链接，如 https://example.com/music.mp3">
-  </div>
-
-  <div class="music-option">
-    <label>或上传本地音乐文件</label>
-    <input type="file" id="musicFileInput" accept="audio/*">
-  </div>
-
-  <div class="btn-row">
-    <button class="btn btn-primary" onclick="addMusic()">添加</button>
-    <button class="btn btn-secondary" onclick="toggleMusicPanel()">关闭</button>
-  </div>
-
-  <div class="music-list" id="musicList">
-    <!-- 音乐列表将通过 JavaScript 动态生成 -->
-  </div>
-</div>
-
-<audio id="bgMusic" loop preload="auto">
-  <source src="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mpeg">
-</audio>
 
 <nav>
   <div class="logo" id="logo">伤口.DEV</div>

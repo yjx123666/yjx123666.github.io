@@ -3,7 +3,6 @@ import { initParticles } from '../modules/particles';
 import { initFadeIn } from '../modules/fadeIn';
 import { initEditMode } from '../modules/editMode';
 import { initTypingAnimation } from '../modules/typing';
-import { initMusic } from '../modules/music';
 import { initContour } from '../modules/contour';
 
 // Background systems
@@ -15,9 +14,6 @@ initFadeIn();
 
 // Typing animation
 initTypingAnimation();
-
-// Music player
-initMusic();
 
 // Edit mode with index page config
 const editHandle = initEditMode({
