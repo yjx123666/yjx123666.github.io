@@ -99,10 +99,21 @@ def shp_to_dwg(shp_path, out_folder, mode="ArcGIS"):
         if err:
             raise RuntimeError(err)
         _shp_to_dwg_ezdxf(shp_path, out_folder, name)
+        return os.path.join(out_folder, name + ".dxf")
     else:
-        out_dwg = os.path.join(out_folder, name + ".dwg")
-        _call_conversion("FeaturesToCAD", shp_path, out_dwg)
-    return os.path.join(out_folder, name + ".dwg")
+        # 尝试 ArcGIS 原生转换
+        try:
+            out_dwg = os.path.join(out_folder, name + ".dwg")
+            _call_conversion("FeaturesToCAD", shp_path, out_dwg)
+            return out_dwg
+        except (RuntimeError, AttributeError) as e:
+            # ArcGIS 许可不够或工具不可用，自动回退到 ezdxf
+            arcpy.AddWarning("FeaturesToCAD 不可用（需要 Advanced 许可），自动切换到 ezdxf 模式")
+            ezdxf_mod, err = _try_import_ezdxf()
+            if err:
+                raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装。请运行: pip install ezdxf")
+            _shp_to_dwg_ezdxf(shp_path, out_folder, name)
+            return os.path.join(out_folder, name + ".dxf")
 
 def _shp_to_dwg_ezdxf(shp_path, out_folder, name):
     ezdxf_mod, _ = _try_import_ezdxf()
@@ -303,9 +314,17 @@ def mdb_to_dwg(mdb_path, out_folder, mode="ArcGIS"):
     else:
         for fc in fcs:
             name = _base_name(fc)
-            out_dwg = os.path.join(out_folder, name + ".dwg")
-            _call_conversion("FeaturesToCAD", fc, out_dwg)
-            results.append(out_dwg)
+            try:
+                out_dwg = os.path.join(out_folder, name + ".dwg")
+                _call_conversion("FeaturesToCAD", fc, out_dwg)
+                results.append(out_dwg)
+            except (RuntimeError, AttributeError):
+                arcpy.AddWarning("FeaturesToCAD 不可用，自动切换到 ezdxf 模式")
+                ezdxf_mod, err = _try_import_ezdxf()
+                if err:
+                    raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装")
+                _shp_to_dwg_ezdxf(fc, out_folder, name)
+                results.append(os.path.join(out_folder, name + ".dxf"))
     return results
 
 def mdb_to_gdb(mdb_path, gdb_path):
@@ -350,9 +369,17 @@ def gdb_to_dwg(gdb_path, out_folder, mode="ArcGIS"):
     else:
         for fc in fcs:
             name = _base_name(fc)
-            out_dwg = os.path.join(out_folder, name + ".dwg")
-            _call_conversion("FeaturesToCAD", fc, out_dwg)
-            results.append(out_dwg)
+            try:
+                out_dwg = os.path.join(out_folder, name + ".dwg")
+                _call_conversion("FeaturesToCAD", fc, out_dwg)
+                results.append(out_dwg)
+            except (RuntimeError, AttributeError):
+                arcpy.AddWarning("FeaturesToCAD 不可用，自动切换到 ezdxf 模式")
+                ezdxf_mod, err = _try_import_ezdxf()
+                if err:
+                    raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装")
+                _shp_to_dwg_ezdxf(fc, out_folder, name)
+                results.append(os.path.join(out_folder, name + ".dxf"))
     return results
 
 def gdb_to_mdb(gdb_path, mdb_path):
