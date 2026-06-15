@@ -691,7 +691,7 @@ class ToSHP(object):
     def __init__(self):
         self.label = "Batch to SHP"
         self.description = "Convert DWG/MDB/GDB/KML to Shapefile"
-        self.canRunInBackground = True
+        self.canRunInBackground = False
     def getParameterInfo(self):
         _add_common_params(self, False)
         self.parameters[1].filter.list = ["DWG", "MDB", "GDB", "KML"]
@@ -707,7 +707,7 @@ class ToDWG(object):
     def __init__(self):
         self.label = "Batch to DWG"
         self.description = "Convert SHP/MDB/GDB/KML to DWG/DXF"
-        self.canRunInBackground = True
+        self.canRunInBackground = False
     def getParameterInfo(self):
         _add_common_params(self, True)
         self.parameters[1].filter.list = ["SHP", "MDB", "GDB", "KML"]
@@ -723,7 +723,7 @@ class ToMDB(object):
     def __init__(self):
         self.label = "Batch to MDB"
         self.description = "Convert SHP/DWG/GDB/KML to Personal Geodatabase"
-        self.canRunInBackground = True
+        self.canRunInBackground = False
     def getParameterInfo(self):
         _add_common_params(self, True)
         self.parameters[1].filter.list = ["SHP", "DWG", "GDB", "KML"]
@@ -739,7 +739,7 @@ class ToGDB(object):
     def __init__(self):
         self.label = "Batch to GDB"
         self.description = "Convert SHP/DWG/MDB/KML to File Geodatabase"
-        self.canRunInBackground = True
+        self.canRunInBackground = False
     def getParameterInfo(self):
         _add_common_params(self, True)
         self.parameters[1].filter.list = ["SHP", "DWG", "MDB", "KML"]
@@ -755,7 +755,7 @@ class ToKML(object):
     def __init__(self):
         self.label = "Batch to KML"
         self.description = "Convert SHP/DWG/MDB/GDB to KML/KMZ"
-        self.canRunInBackground = True
+        self.canRunInBackground = False
     def getParameterInfo(self):
         _add_common_params(self, True)
         self.parameters[1].filter.list = ["SHP", "DWG", "MDB", "GDB"]
