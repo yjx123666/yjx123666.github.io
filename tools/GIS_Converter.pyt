@@ -88,7 +88,16 @@ def _try_import_ezdxf():
         import ezdxf
         return ezdxf, None
     except ImportError:
-        return None, "ezdxf not installed. Run: pip install ezdxf"
+        # 尝试自动安装
+        try:
+            import subprocess
+            import sys
+            arcpy.AddMessage("正在自动安装 ezdxf...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "ezdxf"])
+            import ezdxf
+            return ezdxf, None
+        except Exception as e:
+            return None, "ezdxf 安装失败: " + str(e) + "\n请手动运行: " + sys.executable + " -m pip install ezdxf"
 
 # ------ SHP -> xxx ------
 
