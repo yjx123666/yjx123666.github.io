@@ -43,18 +43,23 @@
   </div>
 
   <div class="block fade-in">
-    <h2>影像记录</h2>
-    <p>用镜头记录生活中的片段。</p>
+    <h2>Procreate 绘画</h2>
+    <p>闲下来的时候喜欢在 iPad 上画画，用 Procreate 随手涂鸦。不算专业，就是图个放松。画得不完美也没关系，开心就好。</p>
     <div class="photo-grid">
-      <div class="photo-item"><img src="hobby/1.jpg" alt="照片1"></div>
-      <div class="photo-item"><img src="hobby/2.jpg" alt="照片2"></div>
-      <div class="photo-item"><img src="hobby/3.jpg" alt="照片3"></div>
-      <div class="photo-item large"><img src="hobby/4.jpg" alt="照片4"></div>
-      <div class="photo-item"><img src="hobby/5.jpg" alt="照片5"></div>
-      <div class="photo-item"><img src="hobby/6.jpg" alt="照片6"></div>
-      <div class="photo-item"><img src="hobby/7.jpg" alt="照片7"></div>
+      <div class="photo-item"><img src="hobby/1.jpg" alt="绘画作品1" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/2.jpg" alt="绘画作品2" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/3.jpg" alt="绘画作品3" onclick="openLightbox(this)"></div>
+      <div class="photo-item large"><img src="hobby/4.jpg" alt="绘画作品4" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/5.jpg" alt="绘画作品5" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/6.jpg" alt="绘画作品6" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/7.jpg" alt="绘画作品7" onclick="openLightbox(this)"></div>
     </div>
   </div>
+</div>
+
+<!-- 灯箱 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
 </div>
 
 <style>
@@ -68,6 +73,7 @@
     border-radius: 4px;
     overflow: hidden;
     aspect-ratio: 4/3;
+    cursor: pointer;
   }
   .photo-item img {
     width: 100%;
@@ -83,6 +89,29 @@
     grid-column: span 2;
     aspect-ratio: 8/3;
   }
+
+  /* 灯箱 */
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .lightbox.show {
+    display: flex;
+  }
+  .lightbox img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
   @media (max-width: 600px) {
     .photo-grid {
       grid-template-columns: repeat(2, 1fr);
@@ -92,6 +121,19 @@
     }
   }
 </style>
+
+<script>
+function openLightbox(el) {
+  document.getElementById('lightbox-img').src = el.src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
 
 <footer>
   <p>伤口.DEV &copy; 2026</p>
