@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-新媒体数据采集与分析工具
+数据采集与分析工具
 支持抖音/小红书分享链接批量提取数据，导出Excel，数据分析可视化
 """
 
@@ -1040,7 +1040,7 @@ class DataAnalyzer:
 
 class Application(ttk.Window):
     def __init__(self):
-        ttk.Window.__init__(self, title="新媒体数据采集与分析工具", themename="cosmo",
+        ttk.Window.__init__(self, title="数据采集与分析工具", themename="cosmo",
                             size=(1060, 720), minsize=(800, 550))
         self.msg_queue = queue.Queue()
         self.results = []
@@ -1053,7 +1053,7 @@ class Application(ttk.Window):
         # --- 标题栏 ---
         frm_header = ttk.Frame(self, padding=10)
         frm_header.pack(fill=X)
-        ttk.Label(frm_header, text="新媒体数据采集与分析工具",
+        ttk.Label(frm_header, text="数据采集与分析工具",
                   font=("Microsoft YaHei UI", 16, "bold")).pack(side=LEFT)
         ttk.Label(frm_header, text="  支持抖音 / 小红书",
                   font=("Microsoft YaHei UI", 9), bootstyle="secondary").pack(side=LEFT, padx=(5, 0), pady=(5, 0))
