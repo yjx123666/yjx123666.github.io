@@ -41,7 +41,57 @@
     <h2>编程与技术探索</h2>
     <p>享受用代码解决问题的过程。不管是写一个自动化脚本省去重复劳动，还是开发一个小工具帮朋友解决实际问题，那种"代码跑通了"的感觉很棒。</p>
   </div>
+
+  <div class="block fade-in">
+    <h2>影像记录</h2>
+    <p>用镜头记录生活中的片段。</p>
+    <div class="photo-grid">
+      <div class="photo-item"><img src="hobby/1.jpg" alt="照片1"></div>
+      <div class="photo-item"><img src="hobby/2.jpg" alt="照片2"></div>
+      <div class="photo-item"><img src="hobby/3.jpg" alt="照片3"></div>
+      <div class="photo-item large"><img src="hobby/4.jpg" alt="照片4"></div>
+      <div class="photo-item"><img src="hobby/5.jpg" alt="照片5"></div>
+      <div class="photo-item"><img src="hobby/6.jpg" alt="照片6"></div>
+      <div class="photo-item"><img src="hobby/7.jpg" alt="照片7"></div>
+    </div>
+  </div>
 </div>
+
+<style>
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .photo-item {
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+  }
+  .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .photo-item:hover img {
+    transform: scale(1.05);
+  }
+  .photo-item.large {
+    grid-column: span 2;
+    aspect-ratio: 8/3;
+  }
+  @media (max-width: 600px) {
+    .photo-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .photo-item.large {
+      grid-column: span 2;
+    }
+  }
+</style>
 
 <footer>
   <p>伤口.DEV &copy; 2026</p>
