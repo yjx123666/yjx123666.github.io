@@ -88,16 +88,7 @@ def _try_import_ezdxf():
         import ezdxf
         return ezdxf, None
     except ImportError:
-        # 尝试自动安装
-        try:
-            import subprocess
-            import sys
-            arcpy.AddMessage("正在自动安装 ezdxf...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "ezdxf"])
-            import ezdxf
-            return ezdxf, None
-        except Exception as e:
-            return None, "ezdxf 安装失败: " + str(e) + "\n请手动运行: " + sys.executable + " -m pip install ezdxf"
+        return None, "ezdxf 未安装。请在命令行运行: C:\\Python27\\ArcGIS10.8\\python.exe -m pip install ezdxf"
 
 # ------ SHP -> xxx ------
 
@@ -115,12 +106,13 @@ def shp_to_dwg(shp_path, out_folder, mode="ArcGIS"):
             out_dwg = os.path.join(out_folder, name + ".dwg")
             _call_conversion("FeaturesToCAD", shp_path, out_dwg)
             return out_dwg
-        except (RuntimeError, AttributeError) as e:
+        except Exception as e:
             # ArcGIS 许可不够或工具不可用，自动回退到 ezdxf
-            arcpy.AddWarning("FeaturesToCAD 不可用（需要 Advanced 许可），自动切换到 ezdxf 模式")
+            arcpy.AddWarning("FeaturesToCAD 不可用: " + str(e))
+            arcpy.AddWarning("自动切换到 ezdxf 模式...")
             ezdxf_mod, err = _try_import_ezdxf()
             if err:
-                raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装。请运行: pip install ezdxf")
+                raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装。\n" + err)
             _shp_to_dwg_ezdxf(shp_path, out_folder, name)
             return os.path.join(out_folder, name + ".dxf")
 
@@ -678,8 +670,8 @@ def _batch_convert(tool, parameters, tgt_format):
             arcpy.AddMessage("  -> OK")
         except Exception as e:
             fail = fail + 1
-            arcpy.AddWarning("  -> FAILED: " + str(e))
-            arcpy.AddWarning(traceback.format_exc())
+            arcpy.AddError("  -> FAILED: " + str(e))
+            arcpy.AddError(traceback.format_exc())
 
     arcpy.AddMessage("=" * 50)
     arcpy.AddMessage("Done! Success:" + str(success) + " Fail:" + str(fail) + " Total:" + str(total))
