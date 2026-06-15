@@ -16,10 +16,8 @@ def _is_arcgis_pro():
         pass
     return False
 
-IS_PRO = _is_arcgis_pro()
-
 def _call_conversion(tool_name, *args, **kwargs):
-    if IS_PRO:
+    if _is_arcgis_pro():
         func = getattr(arcpy.conversion, tool_name, None)
     else:
         func = getattr(arcpy, tool_name + "_conversion", None)
@@ -46,8 +44,15 @@ def _get_input_files(folder, src_format):
     elif fmt == "DWG":
         return _scan_files(folder, [".dwg", ".dxf"])
     elif fmt == "MDB":
+        # If user selected an .mdb file directly, use it
+        if folder.lower().endswith(".mdb") and os.path.isfile(folder):
+            return [folder]
         return _scan_files(folder, [".mdb"])
     elif fmt == "GDB":
+        # If user selected a .gdb folder directly, use it
+        if folder.lower().endswith(".gdb") and os.path.isdir(folder):
+            return [folder]
+        # Otherwise scan for .gdb folders inside
         results = []
         for item in os.listdir(folder):
             full = os.path.join(folder, item)
@@ -88,7 +93,7 @@ def _try_import_ezdxf():
         import ezdxf
         return ezdxf, None
     except ImportError:
-        return None, "ezdxf 未安装。请在命令行运行: C:\\Python27\\ArcGIS10.8\\python.exe -m pip install ezdxf"
+        return None, "ezdxf not installed. Please run: {} -m pip install ezdxf".format(sys.executable)
 
 # ------ SHP -> xxx ------
 
@@ -101,18 +106,18 @@ def shp_to_dwg(shp_path, out_folder, mode="ArcGIS"):
         _shp_to_dwg_ezdxf(shp_path, out_folder, name)
         return os.path.join(out_folder, name + ".dxf")
     else:
-        # 尝试 ArcGIS 原生转换
+        # Try ArcGIS native conversion
         try:
             out_dwg = os.path.join(out_folder, name + ".dwg")
             _call_conversion("FeaturesToCAD", shp_path, out_dwg)
             return out_dwg
         except Exception as e:
-            # ArcGIS 许可不够或工具不可用，自动回退到 ezdxf
-            arcpy.AddWarning("FeaturesToCAD 不可用: " + str(e))
-            arcpy.AddWarning("自动切换到 ezdxf 模式...")
+            # ArcGIS license insufficient or tool unavailable, fallback to ezdxf
+            arcpy.AddWarning("FeaturesToCAD unavailable: " + str(e))
+            arcpy.AddWarning("Switching to ezdxf mode...")
             ezdxf_mod, err = _try_import_ezdxf()
             if err:
-                raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装。\n" + err)
+                raise RuntimeError("FeaturesToCAD unavailable and ezdxf not installed. \n" + err)
             _shp_to_dwg_ezdxf(shp_path, out_folder, name)
             return os.path.join(out_folder, name + ".dxf")
 
@@ -145,7 +150,8 @@ def _shp_to_dwg_ezdxf(shp_path, out_folder, name):
                 if p:
                     pts.append((p.X, p.Y, 0))
             if len(pts) >= 3:
-                msp.add_lwpolyline([(p[0], p[1]) for p in pts], close=True)
+                poly = msp.add_lwpolyline([(p[0], p[1]) for p in pts])
+                poly.set_flag_state(poly.CLOSED, state=True)
     del cursor
     out_dxf = os.path.join(out_folder, name + ".dxf")
     doc.saveas(out_dxf)
@@ -320,10 +326,10 @@ def mdb_to_dwg(mdb_path, out_folder, mode="ArcGIS"):
                 _call_conversion("FeaturesToCAD", fc, out_dwg)
                 results.append(out_dwg)
             except (RuntimeError, AttributeError):
-                arcpy.AddWarning("FeaturesToCAD 不可用，自动切换到 ezdxf 模式")
+                arcpy.AddWarning("FeaturesToCAD unavailable, switching to ezdxf mode")
                 ezdxf_mod, err = _try_import_ezdxf()
                 if err:
-                    raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装")
+                    raise RuntimeError("FeaturesToCAD unavailable and ezdxf not installed")
                 _shp_to_dwg_ezdxf(fc, out_folder, name)
                 results.append(os.path.join(out_folder, name + ".dxf"))
     return results
@@ -375,10 +381,10 @@ def gdb_to_dwg(gdb_path, out_folder, mode="ArcGIS"):
                 _call_conversion("FeaturesToCAD", fc, out_dwg)
                 results.append(out_dwg)
             except (RuntimeError, AttributeError):
-                arcpy.AddWarning("FeaturesToCAD 不可用，自动切换到 ezdxf 模式")
+                arcpy.AddWarning("FeaturesToCAD unavailable, switching to ezdxf mode")
                 ezdxf_mod, err = _try_import_ezdxf()
                 if err:
-                    raise RuntimeError("FeaturesToCAD 不可用且 ezdxf 未安装")
+                    raise RuntimeError("FeaturesToCAD unavailable and ezdxf not installed")
                 _shp_to_dwg_ezdxf(fc, out_folder, name)
                 results.append(os.path.join(out_folder, name + ".dxf"))
     return results
@@ -544,16 +550,6 @@ def convert_one(src_format, tgt_format, src_path, out_folder, extra_params=None)
 
     raise ValueError("Unsupported: " + sf + " -> " + tf)
 
-# =========================================================================
-# ArcGIS Python Toolbox
-# =========================================================================
-
-class Toolbox(object):
-    def __init__(self):
-        self.label = "GIS Format Converter"
-        self.alias = "GISConv"
-        self.tools = [ToSHP, ToDWG, ToMDB, ToGDB, ToKML]
-
 def _add_common_params(tool, include_mode=False):
     tool.parameters = []
 
@@ -613,6 +609,8 @@ def _batch_convert(tool, parameters, tgt_format):
     input_folder = parameters[0].valueAsText
     src_format = parameters[1].valueAsText
     output_folder = parameters[2].valueAsText
+
+    arcpy.env.overwriteOutput = True
 
     coord_sys = None
     if parameters[3].value:
@@ -693,7 +691,13 @@ class ToSHP(object):
     def updateMessages(self, parameters):
         return
     def execute(self, parameters, messages):
-        _batch_convert(self, parameters, "SHP")
+        try:
+            _batch_convert(self, parameters, "SHP")
+        except Exception as e:
+            import traceback
+            arcpy.AddError(str(e))
+            arcpy.AddError(traceback.format_exc())
+            raise
 
 class ToDWG(object):
     def __init__(self):
@@ -709,7 +713,13 @@ class ToDWG(object):
     def updateMessages(self, parameters):
         return
     def execute(self, parameters, messages):
-        _batch_convert(self, parameters, "DWG")
+        try:
+            _batch_convert(self, parameters, "DWG")
+        except Exception as e:
+            import traceback
+            arcpy.AddError(str(e))
+            arcpy.AddError(traceback.format_exc())
+            raise
 
 class ToMDB(object):
     def __init__(self):
@@ -725,7 +735,13 @@ class ToMDB(object):
     def updateMessages(self, parameters):
         return
     def execute(self, parameters, messages):
-        _batch_convert(self, parameters, "MDB")
+        try:
+            _batch_convert(self, parameters, "MDB")
+        except Exception as e:
+            import traceback
+            arcpy.AddError(str(e))
+            arcpy.AddError(traceback.format_exc())
+            raise
 
 class ToGDB(object):
     def __init__(self):
@@ -741,7 +757,13 @@ class ToGDB(object):
     def updateMessages(self, parameters):
         return
     def execute(self, parameters, messages):
-        _batch_convert(self, parameters, "GDB")
+        try:
+            _batch_convert(self, parameters, "GDB")
+        except Exception as e:
+            import traceback
+            arcpy.AddError(str(e))
+            arcpy.AddError(traceback.format_exc())
+            raise
 
 class ToKML(object):
     def __init__(self):
@@ -757,4 +779,20 @@ class ToKML(object):
     def updateMessages(self, parameters):
         return
     def execute(self, parameters, messages):
-        _batch_convert(self, parameters, "KML")
+        try:
+            _batch_convert(self, parameters, "KML")
+        except Exception as e:
+            import traceback
+            arcpy.AddError(str(e))
+            arcpy.AddError(traceback.format_exc())
+            raise
+
+# =========================================================================
+# ArcGIS Python Toolbox
+# =========================================================================
+
+class Toolbox(object):
+    def __init__(self):
+        self.label = "GIS Format Converter"
+        self.alias = "GISConv"
+        self.tools = [ToSHP, ToDWG, ToMDB, ToGDB, ToKML]

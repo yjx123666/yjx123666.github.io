@@ -331,6 +331,23 @@ section h2::after {
   margin: 16px 0;
 }
 
+.screenshot-container {
+  margin: 16px 0;
+}
+
+.screenshot-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.img-caption, .video-caption {
+  text-align: center;
+  font-size: 13px;
+  color: var(--fog);
+  margin-top: 10px;
+  font-style: italic;
+}
+
 /* ========== Video demo ========== */
 .video-container { margin: 16px 0; }
 

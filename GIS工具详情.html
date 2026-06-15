@@ -34,10 +34,12 @@
   <div class="block">
     <h2>功能特点</h2>
     <ul>
-      <li>支持 SHP、DWG、MDB、GDB、KML 五种格式互相转换</li>
-      <li>批量处理，一次转换整个文件夹的数据</li>
-      <li>兼容 ArcMap 10.8 和 ArcGIS Pro</li>
-      <li>纯 Python 2.7 编写，无额外依赖</li>
+      <li><strong>五种格式互转：</strong>SHP、DWG、MDB、GDB、KML 任意方向批量转换</li>
+      <li><strong>批量处理：</strong>一次选择整个文件夹，自动扫描并转换所有匹配文件</li>
+      <li><strong>智能回退：</strong>DWG 转换自动检测许可，无 Data Interoperability 扩展时自动切换 ezdxf 模式</li>
+      <li><strong>坐标系统：</strong>支持输出时指定坐标系，自动投影变换</li>
+      <li><strong>双平台兼容：</strong>同时支持 ArcMap 10.8 和 ArcGIS Pro</li>
+      <li><strong>零依赖：</strong>纯 Python 编写，仅依赖 arcpy（ArcGIS 内置）和可选的 ezdxf</li>
     </ul>
   </div>
 
@@ -53,50 +55,56 @@
 
   <div class="block">
     <h2>界面截图</h2>
-    <div class="screenshot-placeholder">
-      <!-- 替换为实际截图：<img src="截图文件名.png" style="width:100%"> -->
-      在此放置截图
+    <div class="screenshot-container">
+      <img src="media/gis-screenshot.png" alt="GIS格式转换工具界面截图" style="width:100%; border-radius:8px; border:1px solid #2a3a4a;">
+      <p class="img-caption">ArcGIS Desktop 中的 GIS 格式转换工具箱界面</p>
     </div>
   </div>
 
   <div class="block">
     <h2>视频演示</h2>
     <div class="video-container">
-      <div class="video-placeholder">
-        <div class="video-icon">▶</div>
-        <p>演示视频</p>
-        <p class="video-hint">在此处放置视频文件或链接</p>
-      </div>
-      <!-- 替换为实际视频：
-      <video controls width="100%">
-        <source src="演示视频.mp4" type="video/mp4">
+      <video controls width="100%" style="border-radius:8px; border:1px solid #2a3a4a;">
+        <source src="media/gis-demo.mp4" type="video/mp4">
         您的浏览器不支持视频标签
       </video>
-      -->
+      <p class="video-caption">GIS 批量格式转换工具操作演示</p>
     </div>
   </div>
 
   <div class="block">
     <h2>技术细节</h2>
     <table class="info-table">
-      <tr><th>开发语言</th><td>Python 2.7</td></tr>
-      <tr><th>依赖库</th><td>arcpy（ArcGIS 内置）</td></tr>
+      <tr><th>开发语言</th><td>Python 2.7 / 3.x</td></tr>
+      <tr><th>依赖库</th><td>arcpy（ArcGIS 内置）、ezdxf（可选，用于 DWG 转换）</td></tr>
       <tr><th>兼容平台</th><td>ArcMap 10.8 / ArcGIS Pro</td></tr>
       <tr><th>文件格式</th><td>.pyt（Python Toolbox）</td></tr>
+      <tr><th>支持格式</th><td>SHP、DWG、DXF、MDB、GDB、KML、KMZ</td></tr>
     </table>
   </div>
 
   <div class="block">
     <h2>核心代码片段</h2>
     <div class="code-block">
-def _call_conversion(tool_name, *args):
+def _call_conversion(tool_name, *args, **kwargs):
     """兼容 ArcMap 和 ArcGIS Pro 的转换调用"""
-    tool = getattr(arcpy.conversion, tool_name, None)
-    if tool:
-        tool(*args)
+    if _is_arcgis_pro():
+        func = getattr(arcpy.conversion, tool_name, None)
     else:
-        # ArcMap 兼容方案
-        arcpy.AddMessage("Using fallback for " + tool_name)
+        func = getattr(arcpy, tool_name + "_conversion", None)
+    if func is None:
+        raise RuntimeError("Tool not found: " + tool_name)
+    return func(*args, **kwargs)
+
+def _is_arcgis_pro():
+    """检测是否为 ArcGIS Pro"""
+    try:
+        info = arcpy.GetInstallInfo()
+        if info.get("ProductName", "") == "ArcGISPro":
+            return True
+    except:
+        pass
+    return False
     </div>
   </div>
 </div>
