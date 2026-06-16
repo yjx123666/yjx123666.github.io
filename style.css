@@ -111,6 +111,26 @@ nav a:hover::after, nav a.active::after {
   width: 100%;
 }
 
+/* Nav Contact Icons */
+.nav-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.nav-contact a {
+  font-size: 16px;
+  opacity: 0.7;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.nav-contact a:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 /* ========== Containers ========== */
 .container {
   max-width: 900px;
