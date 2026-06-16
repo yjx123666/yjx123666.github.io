@@ -8,6 +8,18 @@
 </head>
 <body>
 
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">加载中...</div>
+</div>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Back to Top -->
+<div class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
 <canvas id="particles"></canvas>
 
 <nav>
@@ -81,6 +93,33 @@
 <footer>
   <p>首页 &copy; 2026</p>
 </footer>
+
+<script>
+// Loading Screen
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingScreen').classList.add('hide');
+  }, 500);
+});
+
+// Scroll Progress
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('scrollProgress').style.width = progress + '%';
+});
+
+// Back to Top
+window.addEventListener('scroll', function() {
+  const backToTop = document.getElementById('backToTop');
+  if (window.scrollY > 300) {
+    backToTop.classList.add('show');
+  } else {
+    backToTop.classList.remove('show');
+  }
+});
+</script>
 
 <script type="module" src="src/pages/main.ts"></script>
 </body>

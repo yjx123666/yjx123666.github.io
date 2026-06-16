@@ -164,6 +164,23 @@
 </head>
 <body>
 
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">加载中...</div>
+</div>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Back to Top -->
+<div class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+<!-- Wechat Modal -->
+<div class="wechat-modal" id="wechatModal" onclick="this.classList.remove('show')">
+  <img src="wechat-qr.jpg" alt="微信二维码">
+</div>
+
 <canvas id="particles"></canvas>
 
 <nav>
@@ -212,6 +229,33 @@
 </div>
 
 
+<section id="contact" class="fade-in">
+  <h2>联系方式</h2>
+  <div class="contact-grid">
+    <a href="mailto:your-email@example.com" class="contact-item">
+      <div class="contact-icon">📧</div>
+      <div class="contact-info">
+        <div class="contact-label">邮箱</div>
+        <div class="contact-value">your-email@example.com</div>
+      </div>
+    </a>
+    <a href="https://github.com/yjx123666" target="_blank" class="contact-item">
+      <div class="contact-icon">💻</div>
+      <div class="contact-info">
+        <div class="contact-label">GitHub</div>
+        <div class="contact-value">github.com/yjx123666</div>
+      </div>
+    </a>
+    <div class="contact-item" onclick="showWechat()">
+      <div class="contact-icon">💬</div>
+      <div class="contact-info">
+        <div class="contact-label">微信</div>
+        <div class="contact-value">点击查看二维码</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="portfolio" class="fade-in">
   <h2>作品展示</h2>
   <div class="gallery">
@@ -248,6 +292,38 @@
 <footer>
   <p>首页 &copy; 2026 &nbsp;|&nbsp; 用 ❤️ 制作</p>
 </footer>
+
+<script>
+// Loading Screen
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingScreen').classList.add('hide');
+  }, 500);
+});
+
+// Scroll Progress
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('scrollProgress').style.width = progress + '%';
+});
+
+// Back to Top
+window.addEventListener('scroll', function() {
+  const backToTop = document.getElementById('backToTop');
+  if (window.scrollY > 300) {
+    backToTop.classList.add('show');
+  } else {
+    backToTop.classList.remove('show');
+  }
+});
+
+// Wechat Modal
+function showWechat() {
+  document.getElementById('wechatModal').classList.add('show');
+}
+</script>
 
 <script type="module" src="src/pages/index.ts"></script>
 </body>

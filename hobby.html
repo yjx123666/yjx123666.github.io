@@ -8,6 +8,18 @@
 </head>
 <body>
 
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">加载中...</div>
+</div>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Back to Top -->
+<div class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
 <canvas id="particles"></canvas>
 
 <nav>
@@ -46,13 +58,13 @@
     <h2>Procreate 绘画</h2>
     <p>闲下来的时候喜欢在 iPad 上画画，用 Procreate 随手涂鸦。不算专业，就是图个放松。画得不完美也没关系，开心就好。</p>
     <div class="photo-grid">
-      <div class="photo-item"><img src="hobby/1.jpg" alt="绘画作品1" onclick="openLightbox(this)"></div>
-      <div class="photo-item"><img src="hobby/2.jpg" alt="绘画作品2" onclick="openLightbox(this)"></div>
-      <div class="photo-item"><img src="hobby/3.jpg" alt="绘画作品3" onclick="openLightbox(this)"></div>
-      <div class="photo-item large"><img src="hobby/4.jpg" alt="绘画作品4" onclick="openLightbox(this)"></div>
-      <div class="photo-item"><img src="hobby/5.jpg" alt="绘画作品5" onclick="openLightbox(this)"></div>
-      <div class="photo-item"><img src="hobby/6.jpg" alt="绘画作品6" onclick="openLightbox(this)"></div>
-      <div class="photo-item"><img src="hobby/7.jpg" alt="绘画作品7" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/1.svg" alt="绘画作品1" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/2.svg" alt="绘画作品2" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/3.svg" alt="绘画作品3" onclick="openLightbox(this)"></div>
+      <div class="photo-item large"><img src="hobby/4.svg" alt="绘画作品4" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/5.svg" alt="绘画作品5" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/6.svg" alt="绘画作品6" onclick="openLightbox(this)"></div>
+      <div class="photo-item"><img src="hobby/7.svg" alt="绘画作品7" onclick="openLightbox(this)"></div>
     </div>
   </div>
 </div>
@@ -138,6 +150,33 @@ document.addEventListener('keydown', function(e) {
 <footer>
   <p>首页 &copy; 2026</p>
 </footer>
+
+<script>
+// Loading Screen
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingScreen').classList.add('hide');
+  }, 500);
+});
+
+// Scroll Progress
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('scrollProgress').style.width = progress + '%';
+});
+
+// Back to Top
+window.addEventListener('scroll', function() {
+  const backToTop = document.getElementById('backToTop');
+  if (window.scrollY > 300) {
+    backToTop.classList.add('show');
+  } else {
+    backToTop.classList.remove('show');
+  }
+});
+</script>
 
 <script type="module" src="src/pages/main.ts"></script>
 </body>
