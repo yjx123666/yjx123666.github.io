@@ -70,6 +70,31 @@
       <div class="photo-item"><img src="hobby/5.jpg" alt="绘画作品5" onclick="openLightbox(this)"></div>
     </div>
   </div>
+
+  <div class="block fade-in">
+    <h2>游戏日常</h2>
+    <p>没内存了，拿来当云盘用了。</p>
+    <div class="video-grid">
+      <div class="video-item">
+        <video controls preload="metadata">
+          <source src="hobby/game1.mp4" type="video/mp4">
+        </video>
+        <div class="video-name">三角洲行动</div>
+      </div>
+      <div class="video-item">
+        <video controls preload="metadata">
+          <source src="hobby/game2.mp4" type="video/mp4">
+        </video>
+        <div class="video-name">游戏片段 2</div>
+      </div>
+      <div class="video-item">
+        <video controls preload="metadata">
+          <source src="hobby/game3.mp4" type="video/mp4">
+        </video>
+        <div class="video-name">游戏片段 3</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 灯箱 -->
@@ -103,6 +128,38 @@
   .photo-item.large {
     grid-column: span 2;
     aspect-ratio: 8/3;
+  }
+
+  /* 视频网格 */
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .video-item {
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--slate);
+    border: 1px solid var(--ridge);
+  }
+  .video-item video {
+    width: 100%;
+    aspect-ratio: 16/9;
+    display: block;
+    background: #000;
+  }
+  .video-name {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--fog);
+    text-align: center;
+  }
+
+  @media (max-width: 600px) {
+    .video-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* 灯箱 */
