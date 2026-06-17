@@ -402,7 +402,7 @@
     <li><a href="life.html" class="active">生活分享</a></li>
   </ul>
   <div class="nav-contact">
-    <a href="mailto:1109872801@qq.com" title="邮箱">邮箱</a>
+    <a href="javascript:void(0)" onclick="copyEmail()" title="邮箱">邮箱</a>
     <a href="https://github.com/yjx123666" target="_blank" title="GitHub">GitHub</a>
     <a href="index.html" title="微信">微信</a>
   </div>
@@ -534,6 +534,16 @@
 </footer>
 
 <script>
+// Copy Email
+function copyEmail() {
+  const email = '1109872801@qq.com';
+  navigator.clipboard.writeText(email).then(function() {
+    alert('邮箱已复制到剪贴板：' + email);
+  }).catch(function() {
+    prompt('请复制邮箱地址：', email);
+  });
+}
+
 // Loading Screen
 window.addEventListener('load', function() {
   setTimeout(function() {
