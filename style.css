@@ -111,24 +111,28 @@ nav a:hover::after, nav a.active::after {
   width: 100%;
 }
 
-/* Nav Contact Icons */
+/* Nav Contact Links */
 .nav-contact {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   margin-left: auto;
 }
 
 .nav-contact a {
-  font-size: 16px;
-  opacity: 0.7;
-  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--fog);
   text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
 }
 
 .nav-contact a:hover {
-  opacity: 1;
-  transform: scale(1.1);
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: var(--amber-dim);
 }
 
 /* ========== Containers ========== */
