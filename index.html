@@ -221,6 +221,11 @@
 </div>
 
 <div class="hero" id="home">
+  <!-- Parallax Layers -->
+  <div class="parallax-layer parallax-bg" id="parallaxBg"></div>
+  <div class="parallax-layer parallax-mid" id="parallaxMid"></div>
+  <div class="parallax-layer parallax-fg" id="parallaxFg"></div>
+
   <div class="hero-content">
     <div class="hero-coord">N 30°45′ &nbsp; E 104°04′</div>
     <img class="avatar" src="avatar.jpg" alt="头像">
@@ -235,6 +240,14 @@
     </div>
   </div>
   <canvas id="contourCanvas"></canvas>
+
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <div class="scroll-mouse">
+      <div class="scroll-wheel"></div>
+    </div>
+    <span>滚动探索</span>
+  </div>
 </div>
 
 
@@ -281,6 +294,32 @@ window.addEventListener('load', function() {
   setTimeout(function() {
     document.getElementById('loadingScreen').classList.add('hide');
   }, 500);
+});
+
+// Parallax Scroll Effect
+const parallaxBg = document.getElementById('parallaxBg');
+const parallaxMid = document.getElementById('parallaxMid');
+const parallaxFg = document.getElementById('parallaxFg');
+const scrollIndicator = document.getElementById('scrollIndicator');
+
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const heroHeight = document.getElementById('home').offsetHeight;
+
+  // Only apply parallax in hero section
+  if (scrollTop < heroHeight) {
+    const speed1 = scrollTop * 0.3;  // Background - slowest
+    const speed2 = scrollTop * 0.5;  // Middle
+    const speed3 = scrollTop * 0.7;  // Foreground - fastest
+
+    parallaxBg.style.transform = `translateY(${speed1}px)`;
+    parallaxMid.style.transform = `translateY(${speed2}px)`;
+    parallaxFg.style.transform = `translateY(${speed3}px)`;
+
+    // Fade out scroll indicator
+    const opacity = Math.max(0, 0.6 - scrollTop / 300);
+    scrollIndicator.style.opacity = opacity;
+  }
 });
 
 // Scroll Progress
