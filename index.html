@@ -195,6 +195,7 @@
     <li><a href="life.html">生活分享</a></li>
   </ul>
   <div class="nav-contact">
+    <div class="nav-clock" id="navClock"></div>
     <a href="javascript:void(0)" onclick="copyEmail()">邮箱</a>
     <a href="https://github.com/yjx123666" target="_blank">GitHub</a>
     <a href="javascript:void(0)" onclick="showWechat()">微信</a>
@@ -288,6 +289,20 @@
 </footer>
 
 <script>
+// Realtime Clock
+function updateClock() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const clockEl = document.getElementById('navClock');
+  if (clockEl) {
+    clockEl.textContent = hours + ':' + minutes + ':' + seconds;
+  }
+}
+updateClock();
+setInterval(updateClock, 1000);
+
 // Loading Screen
 window.addEventListener('load', function() {
   setTimeout(function() {
