@@ -1,0 +1,272 @@
+/* ====== Hero Section ====== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px 60px;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  text-align: center;
+}
+
+/* 经纬度标记 - 弱化 */
+.hero-coord {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(212,160,83,0.25);
+  letter-spacing: 0.15em;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease 0.2s forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 头像 - 缩小发光圈 */
+.hero .avatar {
+  display: block;
+  margin: 0 auto 24px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--amber);
+  box-shadow: 0 0 20px rgba(212,160,83,0.15), 0 0 0 6px rgba(212,160,83,0.08);
+  opacity: 0;
+  animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 主标题 */
+.hero h1 {
+  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  color: var(--ash);
+  letter-spacing: -0.02em;
+}
+
+.hero h1 span {
+  color: var(--amber);
+  display: inline-block;
+}
+
+/* 简介文字 - 加深透明度 */
+.hero-description {
+  font-size: 15px;
+  color: rgba(200,205,211,0.85);
+  line-height: 1.9;
+  margin-bottom: 28px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 技能标签 */
+.hero .tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hero .tag {
+  width: 100px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid rgba(212,160,83,0.2);
+  color: var(--amber);
+  background: rgba(212,160,83,0.06);
+  letter-spacing: 0.03em;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.hero .tag:hover {
+  background: rgba(212,160,83,0.15);
+  border-color: rgba(212,160,83,0.35);
+  transform: translateY(-2px);
+}
+
+/* 打字光标 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typing-cursor::after {
+  content: '|';
+  color: var(--amber);
+  animation: blink 0.8s infinite;
+  margin-left: 2px;
+  text-shadow: 0 0 8px rgba(212,160,83,0.6);
+}
+
+.hero h1 .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  animation: charAppear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes charAppear {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.highlight-char {
+  color: var(--amber) !important;
+  text-shadow: 0 0 12px rgba(212,160,83,0.6);
+}
+
+/* 滚动指示器 */
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+  opacity: 0.5;
+  animation: fadeInUp 1s ease 2s both;
+}
+
+.scroll-mouse {
+  width: 22px;
+  height: 34px;
+  border: 2px solid var(--amber);
+  border-radius: 11px;
+  position: relative;
+  opacity: 0.7;
+}
+
+.scroll-wheel {
+  width: 3px;
+  height: 7px;
+  background: var(--amber);
+  border-radius: 2px;
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheel 2s ease-in-out infinite;
+}
+
+@keyframes scrollWheel {
+  0% { opacity: 1; top: 7px; }
+  100% { opacity: 0; top: 20px; }
+}
+
+.scroll-indicator span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--fog);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* 编辑提示 */
+.edit-hint {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  background: var(--slate);
+  border: 1px solid var(--ridge);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--fog);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.edit-hint:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* 作品展示区域 */
+section {
+  padding: 80px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+section h2 {
+  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 48px;
+  color: var(--ash);
+  letter-spacing: 0.02em;
+}
+
+section h2::after {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  margin: 12px auto 0;
+  border-radius: 1px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .hero {
+    padding: 70px 24px 50px;
+  }
+  .hero h1 {
+    font-size: 32px;
+  }
+  .hero-description {
+    font-size: 14px;
+  }
+  .hero .tag {
+    width: 90px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  section {
+    padding: 50px 16px;
+  }
+  .hero h1 {
+    font-size: 28px;
+  }
+  .hero .tags {
+    gap: 8px;
+  }
+  .hero .tag {
+    width: 80px;
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+}

@@ -86,6 +86,57 @@ VITE_GH_REPO=yjx123666.github.io
 
 ## 部署
 
+### 方式一：阿里云服务器部署（推荐）
+
+网站已部署到阿里云服务器，访问地址：[ssbuxi.top](http://ssbuxi.top)
+
+**服务器信息：**
+- 操作系统：Ubuntu 24.04
+- Web 服务器：Nginx
+- 公网 IP：8.138.173.71
+
+**部署步骤：**
+
+```bash
+# 1. 本地构建
+npm run build
+
+# 2. 上传到服务器
+scp -r dist/* root@8.138.173.71:/var/www/html/
+
+# 3. 服务器配置（首次）
+ssh root@8.138.173.71
+apt update && apt install -y nginx
+systemctl start nginx && systemctl enable nginx
+```
+
+**Nginx 配置（/etc/nginx/sites-available/default）：**
+
+```nginx
+server {
+    listen 80;
+    server_name ssbuxi.top www.ssbuxi.top;
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+}
+```
+
+**域名解析配置（阿里云控制台）：**
+
+| 类型 | 主机记录 | 记录值 |
+|------|----------|--------|
+| A | @ | 8.138.173.71 |
+| A | www | 8.138.173.71 |
+
+### 方式二：GitHub Pages 部署
+
 推送到 `main` 分支后，GitHub Actions 自动构建并部署到 GitHub Pages。
 
 ```bash
@@ -117,10 +168,61 @@ git push
 - **返回顶部** — 滚动超过 300px 后显示
 - **编辑模式** — 点击 Logo 5 次进入，可在线编辑文字
 
+## 设计系统
+
+### 字体方案
+
+| 角色 | 字体 | 用途 |
+|------|------|------|
+| Display | Space Grotesk | 标题、导航、强调文字 |
+| Body | Inter | 正文、段落、列表 |
+| Mono | JetBrains Mono | 代码、标签、时间戳、坐标 |
+| CJK | Noto Serif SC | 中文衬线装饰 |
+
+### 设计令牌
+
+```css
+/* 核心调色板 */
+--ink: #0a0e14        /* 深邃夜空 */
+--slate: #111820      /* 暗色卡片 */
+--ridge: #1a2332      /* 边框线 */
+--amber: #d4a053      /* 主强调色 — 金色 */
+--cyan: #2ca5c7       /* 辅助强调色 — 青色 */
+--ash: #e0e4e8        /* 主文字 */
+--fog: #7a8a9d        /* 次要文字 */
+
+/* 字体比例 — 1.25 模数 */
+--text-xs: 0.75rem    /* 12px */
+--text-sm: 0.875rem   /* 14px */
+--text-base: 1rem     /* 16px */
+--text-lg: 1.125rem   /* 18px */
+--text-xl: 1.25rem    /* 20px */
+--text-2xl: 1.5rem    /* 24px */
+--text-3xl: 1.875rem  /* 30px */
+--text-4xl: 2.25rem   /* 36px */
+--text-5xl: 3rem      /* 48px */
+```
+
+### 设计特色
+
+- **地图网格背景** — 微妙的点阵网格，营造地形图氛围
+- **等高线动画** — Canvas 绘制的地形等高线
+- **视差滚动** — 三层视差深度效果
+- **渐变边框** — 卡片悬停时的金色渐变边框
+- **坐标标记** — 地图坐标风格的装饰元素
+- **打字动画** — 首页标题的逐字显示效果
+
+### 动画原则
+
+- 使用 `cubic-bezier(0.16, 1, 0.3, 1)` 作为主要缓动函数
+- 动画时长：0.3s-0.6s（微交互）、0.6s-1s（页面过渡）
+- 支持 `prefers-reduced-motion` 无障碍偏好
+- 使用 `will-change` 优化性能
+
 ## 技术栈
 
 - **构建工具** — Vite 5
 - **语言** — TypeScript（严格模式）
 - **样式** — 原生 CSS（设计令牌 + CSS 变量）
-- **字体** — Noto Serif SC（Google Fonts）
-- **部署** — GitHub Pages + GitHub Actions
+- **字体** — Space Grotesk + Inter + JetBrains Mono + Noto Serif SC
+- **部署** — 阿里云服务器 + Nginx / GitHub Pages

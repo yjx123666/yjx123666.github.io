@@ -1,0 +1,8 @@
+/* 新媒体工具详情页专属样式 */
+nav .logo { color: #a55eea; }
+nav a:hover, nav a.active { color: #a55eea; }
+.page-header h1 span { color: #a55eea; }
+.page-header .tag { border-color: #a55eea44; color: #a55eea; background: #a55eea11; }
+.block h2 { color: #a55eea; border-left-color: #a55eea; }
+.info-table th { color: #a55eea; }
+footer a { color: #a55eea; }

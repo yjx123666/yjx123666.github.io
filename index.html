@@ -4,163 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>个人主页</title>
+<title>伤口</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  /* ====== Hero: map-legend layout ====== */
-  .hero {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 90px 48px 40px;
-    overflow: hidden;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 1;
-    max-width: 600px;
-    text-align: center;
-  }
-
-  /* Coordinate marker — map grid reference */
-  .hero-coord {
-    font-family: 'Consolas', 'SF Mono', monospace;
-    font-size: 11px;
-    color: rgba(212,160,83,0.35);
-    letter-spacing: 3px;
-    margin-bottom: 24px;
-  }
-
-  .hero .avatar {
-    display: block;
-    margin: 0 auto 24px;
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--amber);
-    box-shadow: 0 0 30px rgba(212,160,83,0.15);
-  }
-
-  .hero h1 {
-    font-family: 'Noto Serif SC', Georgia, serif;
-    font-size: 42px;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 16px;
-    color: var(--ash);
-    letter-spacing: 2px;
-  }
-
-  .hero h1 span { color: var(--amber); }
-
-  .hero-description {
-    font-size: 15px;
-    color: var(--fog);
-    line-height: 1.9;
-    margin-bottom: 24px;
-  }
-
-  .hero .tags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .hero .tag {
-    padding: 4px 14px;
-    border-radius: 2px;
-    font-size: 12px;
-    border: 1px solid rgba(212,160,83,0.15);
-    color: var(--amber);
-    background: var(--amber-dim);
-    letter-spacing: 0.5px;
-  }
-
-  /* Typing cursor */
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-
-  .typing-cursor::after {
-    content: '|';
-    color: var(--amber);
-    animation: blink 0.8s infinite;
-    margin-left: 2px;
-    text-shadow: 0 0 8px rgba(212,160,83,0.6);
-  }
-
-  @keyframes typingGlow {
-    0%, 100% { text-shadow: none; }
-    50% { text-shadow: 0 0 20px rgba(212,160,83,0.2); }
-  }
-
-  .typing-active { animation: typingGlow 2s ease-in-out infinite; }
-  .typing-complete { animation: typingGlow 3s ease-in-out infinite; }
-
-  .hero h1 .char {
-    display: inline-block;
-    opacity: 0;
-    transform: translateY(12px) scale(0.9);
-    animation: charAppear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    will-change: opacity, transform;
-  }
-
-  @keyframes charAppear {
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  .highlight-char {
-    color: var(--amber) !important;
-    text-shadow: 0 0 12px rgba(212,160,83,0.6);
-    animation: charAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-               highlightPulse 2s ease-in-out infinite 0.3s;
-  }
-
-  @keyframes highlightPulse {
-    0%, 100% { text-shadow: 0 0 12px rgba(212,160,83,0.6); }
-    50% { text-shadow: 0 0 20px rgba(212,160,83,0.9), 0 0 40px rgba(212,160,83,0.3); }
-  }
-
-  .edit-hint {
-    position: fixed; bottom: 20px; right: 20px; z-index: 999;
-    background: var(--slate); border: 1px solid var(--ridge);
-    border-radius: 4px; padding: 12px 16px;
-    font-size: 12px; color: var(--fog); cursor: pointer;
-    transition: all 0.3s; display: none;
-  }
-  .edit-hint:hover { border-color: var(--amber); color: var(--amber); }
-
-  /* Section title */
-  section { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
-  section h2 {
-    font-family: 'Noto Serif SC', Georgia, serif;
-    font-size: 22px; font-weight: 700;
-    text-align: center; margin-bottom: 48px;
-    color: var(--ash); letter-spacing: 2px;
-  }
-  section h2::after {
-    content: ''; display: block; width: 32px; height: 1.5px;
-    background: var(--amber); margin: 14px auto 0;
-  }
-
-  @media (max-width: 768px) {
-    .hero { padding: 100px 24px 40px; }
-    .hero-content { max-width: 100%; }
-    .hero h1 { font-size: 32px; }
-  }
-
-  @media (max-width: 600px) {
-    section { padding: 50px 16px; }
-    .hero h1 { font-size: 26px; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="index.css">
 </head>
 <body>
 
@@ -187,6 +36,7 @@
 
 <canvas id="particles"></canvas>
 
+<!-- 导航栏 -->
 <nav>
   <ul>
     <li><a href="index.html" class="active">首页</a></li>
@@ -220,8 +70,8 @@
   </div>
 </div>
 
+<!-- Hero Section -->
 <div class="hero" id="home">
-  <!-- Parallax Layers -->
   <div class="parallax-layer parallax-bg" id="parallaxBg"></div>
   <div class="parallax-layer parallax-mid" id="parallaxMid"></div>
   <div class="parallax-layer parallax-fg" id="parallaxFg"></div>
@@ -230,7 +80,7 @@
     <div class="hero-coord">N 30°45′ &nbsp; E 104°04′</div>
     <img class="avatar" src="avatar.jpg" alt="头像">
     <h1 id="heroTitle" class="typing-cursor"></h1>
-    <p class="hero-description fade-in">不写代码的时候在研究地图，不研究地图的时候在写代码。用 Python 让重复的工作自动化，用数据让世界更清晰。</p>
+    <p class="hero-description fade-in">写代码、画地图、记录生活的普通大学生。喜欢用 Python 解决问题，用 Procreate 随手画画，在代码和现实之间寻找平衡。</p>
     <div class="tags fade-in">
       <span class="tag">Python</span>
       <span class="tag">测绘工程</span>
@@ -241,7 +91,6 @@
   </div>
   <canvas id="contourCanvas"></canvas>
 
-  <!-- Scroll Indicator -->
   <div class="scroll-indicator" id="scrollIndicator">
     <div class="scroll-mouse">
       <div class="scroll-wheel"></div>
@@ -250,7 +99,7 @@
   </div>
 </div>
 
-
+<!-- 作品展示 -->
 <section id="portfolio" class="fade-in">
   <h2>作品展示</h2>
   <div class="gallery">
@@ -260,7 +109,6 @@
         <h3>GPS 位移数据分析与预测系统</h3>
         <p>毕业设计项目。基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用，支持数据预处理、自动选参、模型诊断和精度验证。</p>
         <div class="card-tags"><span>Python</span><span>ARIMA</span><span>tkinter</span><span>statsmodels</span></div>
-        <div class="card-date">2026 年 6 月 · 毕业设计</div>
       </div>
     </a>
     <a href="GIS工具详情.html" class="card">
@@ -269,27 +117,28 @@
         <h3>GIS 批量格式转换工具</h3>
         <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。纯 Python 2.7 编写，无需额外依赖。</p>
         <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
-        <div class="card-date">2026 年 6 月</div>
       </div>
     </a>
     <a href="新媒体工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/media-tool-screenshot.png" alt="新媒体工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3>新媒体数据采集与分析工具</h3>
+        <h3>数据采集与分析工具</h3>
         <p>带 GUI 界面的桌面应用，支持抖音/小红书作品批量采集、账号整体分析（爆款率、Top5 排行）、导出 Excel 和可视化图表。</p>
         <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>pandas</span><span>matplotlib</span></div>
-        <div class="card-date">2026 年 6 月</div>
       </div>
     </a>
   </div>
 </section>
+
+<!-- 评论留言区域 -->
+<div id="comments-container"></div>
 
 <footer>
   <p>首页 &copy; 2026</p>
 </footer>
 
 <script>
-// Realtime Clock
+// 实时时钟
 function updateClock() {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, '0');
@@ -303,14 +152,14 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// Loading Screen
+// 加载动画
 window.addEventListener('load', function() {
   setTimeout(function() {
     document.getElementById('loadingScreen').classList.add('hide');
   }, 500);
 });
 
-// Parallax Scroll Effect
+// 视差滚动
 const parallaxBg = document.getElementById('parallaxBg');
 const parallaxMid = document.getElementById('parallaxMid');
 const parallaxFg = document.getElementById('parallaxFg');
@@ -320,23 +169,21 @@ window.addEventListener('scroll', function() {
   const scrollTop = window.scrollY;
   const heroHeight = document.getElementById('home').offsetHeight;
 
-  // Only apply parallax in hero section
   if (scrollTop < heroHeight) {
-    const speed1 = scrollTop * 0.3;  // Background - slowest
-    const speed2 = scrollTop * 0.5;  // Middle
-    const speed3 = scrollTop * 0.7;  // Foreground - fastest
+    const speed1 = scrollTop * 0.3;
+    const speed2 = scrollTop * 0.5;
+    const speed3 = scrollTop * 0.7;
 
     parallaxBg.style.transform = `translateY(${speed1}px)`;
     parallaxMid.style.transform = `translateY(${speed2}px)`;
     parallaxFg.style.transform = `translateY(${speed3}px)`;
 
-    // Fade out scroll indicator
-    const opacity = Math.max(0, 0.6 - scrollTop / 300);
+    const opacity = Math.max(0, 0.5 - scrollTop / 300);
     scrollIndicator.style.opacity = opacity;
   }
 });
 
-// Scroll Progress
+// 滚动进度条
 window.addEventListener('scroll', function() {
   const scrollTop = window.scrollY;
   const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -344,7 +191,7 @@ window.addEventListener('scroll', function() {
   document.getElementById('scrollProgress').style.width = progress + '%';
 });
 
-// Back to Top
+// 返回顶部按钮
 window.addEventListener('scroll', function() {
   const backToTop = document.getElementById('backToTop');
   if (window.scrollY > 300) {
@@ -354,12 +201,12 @@ window.addEventListener('scroll', function() {
   }
 });
 
-// Wechat Modal
+// 微信弹窗
 function showWechat() {
   document.getElementById('wechatModal').classList.add('show');
 }
 
-// Copy Email
+// 复制邮箱
 function copyEmail() {
   const email = '1109872801@qq.com';
   navigator.clipboard.writeText(email).then(function() {
@@ -370,6 +217,9 @@ function copyEmail() {
 }
 </script>
 
+<script src="theme.js"></script>
+<script src="animations.js"></script>
+<script src="comments.js"></script>
 <script type="module" src="src/pages/index.ts"></script>
 </body>
 </html>

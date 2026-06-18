@@ -16,5 +16,9 @@ export default defineConfig({
       },
     },
     outDir: 'dist',
+    cssCodeSplit: false,
+  },
+  css: {
+    preprocessorOptions: {},
   },
 });
