@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>伤口</title>
+<title>Re</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&family=LXGW+WenKai:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="index.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -36,19 +37,26 @@
 
 <canvas id="particles"></canvas>
 
+<!-- Aurora gradient mesh background -->
+<div class="aurora-bg" aria-hidden="true">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+
 <!-- 导航栏 -->
 <nav>
   <ul>
-    <li><a href="index.html" class="active">首页</a></li>
-    <li><a href="software.html">工具开发</a></li>
-    <li><a href="hobby.html">兴趣爱好</a></li>
-    <li><a href="life.html">生活分享</a></li>
+    <li><a href="index.html" class="active"><i data-lucide="home" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>首页</a></li>
+    <li><a href="software.html"><i data-lucide="wrench" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>工具开发</a></li>
+    <li><a href="hobby.html"><i data-lucide="palette" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>兴趣爱好</a></li>
+    <li><a href="life.html"><i data-lucide="camera" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>生活分享</a></li>
   </ul>
   <div class="nav-contact">
     <div class="nav-clock" id="navClock"></div>
-    <a href="javascript:void(0)" onclick="copyEmail()">邮箱</a>
-    <a href="https://github.com/yjx123666" target="_blank">GitHub</a>
-    <a href="javascript:void(0)" onclick="showWechat()">微信</a>
+    <a href="javascript:void(0)" onclick="copyEmail()"><i data-lucide="mail" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>邮箱</a>
+    <a href="https://github.com/yjx123666" target="_blank"><i data-lucide="github" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>GitHub</a>
+    <a href="javascript:void(0)" onclick="showWechat()"><i data-lucide="message-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>微信</a>
   </div>
 </nav>
 
@@ -82,18 +90,22 @@
     <h1 id="heroTitle" class="typing-cursor"></h1>
     <p class="hero-description fade-in">写代码、画地图、记录生活的普通大学生。喜欢用 Python 解决问题，用 Procreate 随手画画，在代码和现实之间寻找平衡。</p>
     <div class="tags fade-in">
-      <span class="tag">Python</span>
-      <span class="tag">测绘工程</span>
-      <span class="tag">数据分析</span>
-      <span class="tag">Web 开发</span>
-      <span class="tag">自动化办公</span>
+      <span class="tag"><i data-lucide="code-2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Python</span>
+      <span class="tag"><i data-lucide="map" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>测绘工程</span>
+      <span class="tag"><i data-lucide="bar-chart-3" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>数据分析</span>
+      <span class="tag"><i data-lucide="globe" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Web 开发</span>
+      <span class="tag"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>自动化办公</span>
+    </div>
+    <div class="fade-in" style="margin-top:24px;">
+      <a href="/map/" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#1a73e8,#4da6ff);color:#fff;font-size:15px;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;box-shadow:0 4px 15px rgba(26,115,232,0.3);transition:all 0.3s;">🗺️ 进入地图标注系统</a>
+      <a href="software.html" style="display:inline-block;color:#888;font-size:13px;margin-left:12px;text-decoration:none;">查看全部工具 →</a>
     </div>
   </div>
   <canvas id="contourCanvas"></canvas>
 
-  <div class="scroll-indicator" id="scrollIndicator">
-    <div class="scroll-mouse">
-      <div class="scroll-wheel"></div>
+  <div class="scroll-indicator" id="scrollIndicator" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">
+    <div class="scroll-chevron">
+      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <span>滚动探索</span>
   </div>
@@ -101,20 +113,25 @@
 
 <!-- 作品展示 -->
 <section id="portfolio" class="fade-in">
+  <svg class="topo-divider" viewBox="0 0 200 24" aria-hidden="true">
+    <path d="M0,12 Q25,4 50,12 T100,12 T150,12 T200,12"/>
+    <path d="M10,16 Q35,8 60,16 T110,16 T160,16 T200,16"/>
+    <path d="M-10,8 Q15,0 40,8 T90,8 T140,8 T210,8"/>
+  </svg>
   <h2>作品展示</h2>
   <div class="gallery">
     <a href="gps-detail.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/gps-screenshot.png" alt="GPS系统截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3>GPS 位移数据分析与预测系统</h3>
+        <h3><i data-lucide="satellite" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--amber);"></i>GPS 位移数据分析与预测系统</h3>
         <p>毕业设计项目。基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用，支持数据预处理、自动选参、模型诊断和精度验证。</p>
         <div class="card-tags"><span>Python</span><span>ARIMA</span><span>tkinter</span><span>statsmodels</span></div>
       </div>
     </a>
     <a href="GIS工具详情.html" class="card">
-      <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="media/gis-screenshot.png" alt="GIS工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
+      <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/media/gis-screenshot.png" alt="GIS工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3>GIS 批量格式转换工具</h3>
+        <h3><i data-lucide="map-pin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--cyan);"></i>GIS 批量格式转换工具</h3>
         <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。纯 Python 2.7 编写，无需额外依赖。</p>
         <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
       </div>
@@ -122,19 +139,26 @@
     <a href="新媒体工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/media-tool-screenshot.png" alt="新媒体工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3>数据采集与分析工具</h3>
+        <h3><i data-lucide="trending-up" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:#e17055;"></i>数据采集与分析工具</h3>
         <p>带 GUI 界面的桌面应用，支持抖音/小红书作品批量采集、账号整体分析（爆款率、Top5 排行）、导出 Excel 和可视化图表。</p>
         <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>pandas</span><span>matplotlib</span></div>
+      </div>
+    </a>
+
+    <a href="dy-comment-tool.html" class="card">
+      <div class="card-img" style="background:linear-gradient(135deg,#0f0f1a,#1a1a2e,#2d1b69);display:flex;align-items:center;justify-content:center;font-size:48px;color:#8b5cf6;">💬</div>
+      <div class="card-body">
+        <h3>抖音评论抓取工具 <span style="font-size:12px;color:var(--amber);background:var(--amber-dim);padding:2px 8px;border-radius:4px;margin-left:8px;">待改进</span></h3>
+        <p>基于 Playwright 的视频评论自动抓取桌面应用，采用 API 拦截 + DOM 解析 + RENDER_DATA 三层兜底策略，支持 Cookie 复用和 Excel 导出。</p>
+        <div class="card-tags"><span>Python</span><span>Playwright</span><span>PyQt5</span><span>openpyxl</span></div>
       </div>
     </a>
   </div>
 </section>
 
-<!-- 评论留言区域 -->
-<div id="comments-container"></div>
 
 <footer>
-  <p>首页 &copy; 2026</p>
+  <p>Re &copy; 2026</p>
 </footer>
 
 <script>
@@ -219,7 +243,50 @@ function copyEmail() {
 
 <script src="theme.js"></script>
 <script src="animations.js"></script>
-<script src="comments.js"></script>
 <script type="module" src="src/pages/index.ts"></script>
+
+<script>
+// Card magnetic tilt effect
+document.querySelectorAll('.card').forEach(function(card) {
+  card.addEventListener('mousemove', function(e) {
+    var rect = card.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var centerX = rect.width / 2;
+    var centerY = rect.height / 2;
+    var rotateX = ((y - centerY) / centerY) * -4;
+    var rotateY = ((x - centerX) / centerX) * 4;
+    card.style.transform = 'translateY(-6px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+  });
+  card.addEventListener('mouseleave', function() {
+    card.style.transform = '';
+  });
+});
+
+// 卡片交错入场动画
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      var cards = entry.target.querySelectorAll('.card');
+      cards.forEach(function(card, index) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(40px)';
+        card.style.transition = 'opacity 0.6s ease ' + (index * 0.15) + 's, transform 0.6s ease ' + (index * 0.15) + 's';
+        setTimeout(function() {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 50);
+      });
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+var gallery = document.querySelector('.gallery');
+if (gallery) observer.observe(gallery);
+
+// 初始化 Lucide 图标
+lucide.createIcons();
+</script>
 </body>
 </html>

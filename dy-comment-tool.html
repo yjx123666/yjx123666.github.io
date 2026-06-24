@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抖音评论抓取工具 — Re</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="media-tool.css">
+</head>
+<body>
+<nav>
+  <div class="logo">抖音评论抓取工具</div>
+  <ul>
+    <li><a href="index.html">首页</a></li>
+    <li><a href="software.html" class="active">工具开发</a></li>
+    <li><a href="hobby.html">兴趣爱好</a></li>
+    <li><a href="life.html">生活分享</a></li>
+  </ul>
+</nav>
+<div class="container">
+  <div class="page-header">
+    <div class="icon">💬</div>
+    <h1>抖音<span>评论抓取工具</span></h1>
+    <p>基于 Playwright 的视频评论自动抓取桌面应用，支持 API 拦截、滚动加载、Cookie 复用和 Excel 导出。</p>
+    <div class="tags">
+      <span class="tag">Python</span><span class="tag">Playwright</span><span class="tag">PyQt5</span><span class="tag">openpyxl</span>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>项目介绍</h2>
+    <p>手动复制抖音评论效率太低，且抖音的反爬机制不断升级，传统的 DOM 解析方式越来越不稳定。因此开发了这个工具，采用 API 拦截 + DOM 解析 + RENDER_DATA 三层兜底策略，结合 Playwright 浏览器自动化，稳定抓取视频评论数据。</p>
+  </div>
+
+  <div class="block">
+    <h2>功能特点</h2>
+    <ul>
+      <li><strong>API 拦截优先</strong> — 通过拦截抖音评论接口直接获取结构化 JSON 数据，比 DOM 解析稳定 10 倍</li>
+      <li><strong>三层兜底策略</strong> — API 拦截 → DOM 选择器解析 → RENDER_DATA 提取，确保最大程度获取数据</li>
+      <li><strong>Cookie 复用</strong> — 首次扫码登录后自动保存 Cookie，后续打开工具自动加载免登录</li>
+      <li><strong>反检测机制</strong> — 隐藏 webdriver 标志、伪造浏览器指纹、模拟真实用户滚动行为</li>
+      <li><strong>智能滚动加载</strong> — 鼠标滚轮模拟 + scrollTop 设置 + 页面级滚动，多策略触发虚拟列表加载</li>
+      <li><strong>验证码检测</strong> — 自动检测滑块验证码，暂停抓取等待用户手动完成</li>
+      <li><strong>Excel 导出</strong> — 一键导出 .xlsx 格式，自动美化表头、冻结首行、自适应列宽</li>
+      <li><strong>实时日志</strong> — PyQt5 界面实时显示抓取进度、API 拦截数量、滚动次数等调试信息</li>
+    </ul>
+  </div>
+
+  <div class="block" style="border-left:3px solid var(--amber);padding-left:20px;background:var(--amber-dim);border-radius:0 8px 8px 0;">
+    <h2 style="color:var(--amber);">⚠️ 已知问题与待改进</h2>
+    <ul>
+      <li><strong>评论数量不稳定</strong> — 抖音反爬策略频繁更新，API 拦截成功率波动较大，实际抓取数量可能低于预期目标</li>
+      <li><strong>滚动加载不完整</strong> — 虚拟列表加载机制依赖前端渲染，部分长评论区可能无法触发完整加载</li>
+      <li><strong>RENDER_DATA 解析脆弱</strong> — 抖音页面结构变化会导致 RENDER_DATA 路径失效，需要频繁维护正则表达式</li>
+      <li><strong>验证码处理被动</strong> — 仅支持暂停等待用户手动处理，无法自动识别滑块验证码</li>
+      <li><strong>Cookie 过期无提示</strong> — Cookie 失效时可能直接抓取失败，缺少自动重新登录流程</li>
+      <li><strong>仅支持 Edge 浏览器</strong> — Playwright 配置锁定 msedge，Chrome/Firefox 用户无法使用</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--fog);font-size:14px;">📌 欢迎提交 Issue 反馈问题，或贡献代码改进。</p>
+  </div>
+
+  <div class="block">
+    <h2>技术架构</h2>
+    <h3 style="color:#00d2ff;margin:16px 0 8px;">核心模块</h3>
+    <ul>
+      <li><code>browser.py</code> — Playwright 浏览器生命周期管理，注入反检测脚本，Cookie 持久化</li>
+      <li><code>auth.py</code> — 登录状态检测（UI 元素判断），扫码登录流程，Cookie 有效性验证</li>
+      <li><code>comment_scraper.py</code> — 评论抓取核心，API 拦截 + DOM 解析 + RENDER_DATA 提取</li>
+      <li><code>exporter.py</code> — openpyxl Excel 导出，支持自适应列宽、冻结首行、自动筛选</li>
+    </ul>
+    <h3 style="color:#00d2ff;margin:16px 0 8px;">技术亮点</h3>
+    <ul>
+      <li>API 拦截在页面导航之前设置 <code>page.on("response")</code>，不错过首次加载的评论请求</li>
+      <li>鼠标滚轮模拟真实滚动行为，触发抖音虚拟列表的 IntersectionObserver 加载机制</li>
+      <li>递归 20 层深度搜索 RENDER_DATA 中的嵌套评论数据</li>
+      <li>QThread + threading.Event 实现登录等待，用户点击「确认登录」后才继续抓取</li>
+    </ul>
+  </div>
+
+  <div class="block">
+    <h2>使用流程</h2>
+    <ol>
+      <li>运行 <code>python main.py</code> 启动工具</li>
+      <li>粘贴抖音视频链接或分享文本</li>
+      <li>设置目标评论数量（默认 200 条）</li>
+      <li>点击「开始抓取」→ 首次需要在弹出的 Edge 浏览器中扫码登录</li>
+      <li>登录完成后点击「确认登录」→ 工具自动保存 Cookie 并开始抓取</li>
+      <li>抓取完成后点击「导出 Excel」保存到桌面</li>
+    </ol>
+  </div>
+
+  <div class="block">
+    <h2>依赖安装</h2>
+    <div class="code-block">pip install playwright PyQt5 openpyxl
+playwright install msedge
+python main.py</div>
+  </div>
+
+  <div class="block">
+    <h2>项目结构</h2>
+    <div class="code-block">dy工具/
+├── main.py              # 入口
+├── config.py            # 全局配置
+├── requirements.txt     # 依赖清单
+├── core/
+│   ├── browser.py       # 浏览器管理 + 反检测
+│   ├── auth.py          # 登录 + Cookie 管理
+│   ├── comment_scraper.py # 评论抓取核心
+│   └── exporter.py      # Excel 导出
+└── ui/
+    ├── main_window.py   # 主窗口界面
+    ├── worker.py        # 后台线程
+    └── styles.py        # QSS 样式表</div>
+  </div>
+</div>
+<footer>
+  <p>抖音评论抓取工具 &copy; 2026 &nbsp;|&nbsp; <a href="software.html">返回工具开发</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>杨钧雄 — 新媒体运营简历</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1923;
+    --slate: #182635;
+    --ridge: #243447;
+    --amber: #d4a053;
+    --amber-dim: rgba(212, 160, 83, 0.1);
+    --coral: #e17055;
+    --cyan: #2ca5c7;
+    --ash: #e8ecf0;
+    --fog: #8899aa;
+    --white: #ffffff;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page { size: A4; margin: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 14mm 15mm;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ====== 顶部条 ====== */
+  .top-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--amber), var(--coral), var(--cyan));
+    flex-shrink: 0;
+  }
+
+  /* ====== 头部 ====== */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 0 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .header-info h1 {
+    font-size: 23px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .header-info .role {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--amber);
+    background: var(--amber-dim);
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .contact-row span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .contact-row a {
+    color: var(--cyan);
+    text-decoration: none;
+  }
+
+  .contact-row a:hover {
+    text-decoration: underline;
+  }
+
+  /* ====== 内容区 ====== */
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .main {
+    padding: 12px 18px 12px 0;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .side {
+    padding: 12px 0 12px 18px;
+    overflow: hidden;
+  }
+
+  /* ====== 区块标题 ====== */
+  .section {
+    margin-bottom: 14px;
+  }
+
+  .section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--amber);
+    letter-spacing: 0.05em;
+  }
+
+  /* ====== 教育 ====== */
+  .edu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .edu-school {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .edu-date {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  .edu-major {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ====== 项目 ====== */
+  .project {
+    margin-bottom: 13px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .project:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+
+  .project-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .project-date {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .project-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+
+  .project-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 3px;
+  }
+
+  .project-highlight {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.55;
+    padding-left: 7px;
+    border-left: 2px solid var(--amber);
+    margin-bottom: 3px;
+  }
+
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .project-tags span {
+    padding: 2px 7px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    background: #f0f4f8;
+    color: var(--text-secondary);
+    border-radius: 3px;
+  }
+
+  /* ====== 侧边栏 ====== */
+  .skill-group {
+    margin-bottom: 11px;
+  }
+
+  .skill-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .skill-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .skill-tags span {
+    padding: 2px 8px;
+    font-size: 11px;
+    background: #f0f4f8;
+    color: var(--text-secondary);
+    border-radius: 3px;
+  }
+
+  .skill-tags.highlight span {
+    background: var(--amber-dim);
+    color: var(--amber);
+    font-weight: 500;
+  }
+
+  /* ====== 平台/语言 ====== */
+  .platform {
+    margin-bottom: 7px;
+  }
+
+  .platform:last-child {
+    margin-bottom: 0;
+  }
+
+  .platform-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0;
+  }
+
+  .platform-detail {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ====== 自我评价 ====== */
+  .summary-item {
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .summary-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .summary-item strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ====== 打印 ====== */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; width: 210mm; min-height: 297mm; padding: 14mm 15mm; }
+    .skill-tags span:hover { background: #f0f4f8; color: var(--text-secondary); }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 0; }
+    .page { width: 100%; min-height: auto; border-radius: 0; }
+    .header { flex-direction: column; align-items: center; text-align: center; padding: 20px 20px 16px; gap: 12px; }
+    .contact-row { justify-content: center; }
+    .content { grid-template-columns: 1fr; }
+    .main { border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+    .side { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar"></div>
+
+  <!-- 头部 -->
+  <div class="header">
+    <img class="photo" src="photo.jpg" alt="杨钧雄">
+    <div class="header-info">
+      <h1>杨钧雄</h1>
+      <div class="role">新媒体运营</div>
+      <div class="contact-row">
+        <span>📱 15986475081</span>
+        <span>✉️ 1109872801@qq.com</span>
+        <span>🔗 <a href="http://8.138.173.71" target="_blank">ssbuxi.top</a></span>
+        <span>💻 <a href="https://github.com/yjx123666" target="_blank">GitHub</a></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- 左侧主体 -->
+    <div class="main">
+
+      <!-- 教育背景 -->
+      <div class="section">
+        <div class="section-title">教育背景</div>
+        <div class="edu-item">
+          <span class="edu-school">广东工业大学</span>
+          <span class="edu-date">2022.09 — 2026.06</span>
+        </div>
+        <div class="edu-major">测绘工程 · 本科</div>
+        <div class="edu-major" style="margin-top: 2px; color: var(--text-muted);">
+          主修课程：测量学、GIS 原理、遥感数据处理、数据库原理、程序设计基础
+        </div>
+      </div>
+
+      <!-- 项目经验 -->
+      <div class="section">
+        <div class="section-title">项目经验</div>
+
+        <div class="project">
+          <div class="project-header">
+            <span class="project-name">抖音 / 小红书数据采集与分析工具</span>
+            <span class="project-date">2025</span>
+          </div>
+          <div class="project-sub">独立开发 · 桌面应用</div>
+          <div class="project-desc">
+            基于 Python 开发的桌面应用（约 1800 行），支持抖音和小红书两个平台。包含作品采集（批量粘贴分享链接，自动提取标题、点赞、评论、收藏等数据）和账号分析（自动滚动加载全部作品，计算爆款率、平均互动量、Top5 排行）两个核心模块。
+          </div>
+          <div class="project-highlight">
+            Selenium 自动化采集引擎，JS 注入 + DOM 解析双重提取策略。一键导出 Excel 和 matplotlib 可视化图表。
+          </div>
+          <div class="project-tags">
+            <span>Python</span><span>Selenium</span><span>pandas</span><span>matplotlib</span><span>tkinter</span><span>openpyxl</span>
+          </div>
+        </div>
+
+        <div class="project">
+          <div class="project-header">
+            <span class="project-name">个人作品集网站（<a href="http://8.138.173.71" target="_blank">ssbuxi.top</a>）</span>
+            <span class="project-date">2025</span>
+          </div>
+          <div class="project-sub">独立开发 · 持续迭代</div>
+          <div class="project-desc">
+            从设计到部署全流程独立完成。含 7 个页面，支持暗色/亮色主题、Canvas 粒子动画、等高线地形动画、打字效果、滚动视差。后端 Flask 评论 API，部署在阿里云 Nginx。
+          </div>
+          <div class="project-highlight">
+            具备品牌官网和 H5 着陆页全流程能力：UI 设计 → 前端开发 → 后端接口 → 服务器部署 → 域名配置。
+          </div>
+          <div class="project-tags">
+            <span>TypeScript</span><span>Vite</span><span>Flask</span><span>Nginx</span><span>Canvas</span><span>CSS</span>
+          </div>
+        </div>
+
+        <div class="project">
+          <div class="project-header">
+            <span class="project-name">GIS 批量格式转换工具</span>
+            <span class="project-date">2025</span>
+          </div>
+          <div class="project-sub">独立开发 · ArcGIS 插件</div>
+          <div class="project-desc">
+            基于 ArcGIS Python Toolbox 开发的桌面插件，支持 SHP、DWG、MDB、GDB、KML 等多种 GIS 数据格式批量互转，解决测绘工作中格式兼容的重复劳动问题。
+          </div>
+          <div class="project-tags">
+            <span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自我评价 -->
+      <div class="section">
+        <div class="section-title">自我评价</div>
+        <div class="summary-item">
+          <strong>数据驱动型运营。</strong>能自己写脚本采集竞品数据、分析爆款规律、生成可视化报告，相信好的内容策略应建立在数据洞察之上。
+        </div>
+        <div class="summary-item">
+          <strong>能动手就不求人。</strong>从数据采集工具到个人网站，所有项目独立完成。会画画、会写代码、会做页面，减少对设计和开发的依赖。
+        </div>
+        <div class="summary-item">
+          <strong>技术 + 内容复合能力。</strong>长期关注各平台内容趋势，同时具备将运营想法快速落地为工具或页面的技术能力，能从策划到复盘形成完整闭环。
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右侧边栏 -->
+    <div class="side">
+
+      <!-- 专业技能 -->
+      <div class="section">
+        <div class="section-title">专业技能</div>
+
+        <div class="skill-group">
+          <div class="skill-group-title">运营能力</div>
+          <div class="skill-tags highlight">
+            <span>抖音运营</span>
+            <span>小红书运营</span>
+            <span>内容策划</span>
+            <span>数据分析</span>
+            <span>竞品调研</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <div class="skill-group-title">技术工具</div>
+          <div class="skill-tags">
+            <span>Python</span>
+            <span>Selenium</span>
+            <span>pandas</span>
+            <span>matplotlib</span>
+            <span>Excel</span>
+            <span>数据可视化</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <div class="skill-group-title">内容制作</div>
+          <div class="skill-tags">
+            <span>Procreate</span>
+            <span>HTML/CSS</span>
+            <span>文案撰写</span>
+            <span>图片处理</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <div class="skill-group-title">开发能力</div>
+          <div class="skill-tags">
+            <span>TypeScript</span>
+            <span>Vite</span>
+            <span>Flask</span>
+            <span>Nginx</span>
+            <span>Git</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平台认知 -->
+      <div class="section">
+        <div class="section-title">平台认知</div>
+
+        <div class="platform">
+          <div class="platform-name">抖音</div>
+          <div class="platform-detail">算法推荐机制、完播率/互动率等核心指标分析、热门内容趋势追踪</div>
+        </div>
+        <div class="platform">
+          <div class="platform-name">小红书</div>
+          <div class="platform-detail">搜索流量与推荐流量双引擎、笔记内容优化、账号数据复盘</div>
+        </div>
+      </div>
+
+      <!-- 语言能力 -->
+      <div class="section">
+        <div class="section-title">语言能力</div>
+        <div class="platform">
+          <div class="platform-name">英语</div>
+          <div class="platform-detail">CET-4，能阅读英文技术文档，熟练使用 AI 工具辅助工作</div>
+        </div>
+        <div class="platform">
+          <div class="platform-name">普通话</div>
+          <div class="platform-detail">母语，具备文案撰写与口头表达能力</div>
+        </div>
+      </div>
+
+      <!-- 个人特质 -->
+      <div class="section">
+        <div class="section-title">个人特质</div>
+        <div class="skill-tags">
+          <span>自驱力强</span>
+          <span>快速学习</span>
+          <span>跨领域思维</span>
+          <span>独立执行</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

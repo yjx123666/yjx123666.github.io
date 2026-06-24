@@ -53,13 +53,13 @@
 
 /* 主标题 */
 .hero h1 {
-  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-family: 'Noto Serif SC', 'Space Grotesk', serif;
   font-size: 42px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.3;
   margin-bottom: 16px;
   color: var(--ash);
-  letter-spacing: -0.02em;
+  letter-spacing: 0.03em;
 }
 
 .hero h1 span {
@@ -140,50 +140,62 @@
 /* 滚动指示器 */
 .scroll-indicator {
   position: absolute;
-  bottom: 32px;
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  z-index: 10;
-  opacity: 0.5;
-  animation: fadeInUp 1s ease 2s both;
-}
-
-.scroll-mouse {
-  width: 22px;
-  height: 34px;
-  border: 2px solid var(--amber);
-  border-radius: 11px;
-  position: relative;
-  opacity: 0.7;
-}
-
-.scroll-wheel {
-  width: 3px;
-  height: 7px;
-  background: var(--amber);
-  border-radius: 2px;
-  position: absolute;
-  top: 7px;
+  bottom: 36px;
   left: 50%;
   transform: translateX(-50%);
-  animation: scrollWheel 2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  padding: 8px 20px;
+  background: rgba(17, 24, 32, 0.6);
+  border: 1px solid rgba(26, 35, 50, 0.5);
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: indicatorIn 0.8s ease 2s both;
+  cursor: pointer;
 }
 
-@keyframes scrollWheel {
-  0% { opacity: 1; top: 7px; }
-  100% { opacity: 0; top: 20px; }
+.scroll-indicator:hover {
+  border-color: rgba(212, 160, 83, 0.3);
+  background: rgba(17, 24, 32, 0.8);
 }
 
 .scroll-indicator span {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--fog);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.scroll-chevron {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: chevronBounce 2s ease-in-out infinite;
+}
+
+.scroll-chevron svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--amber);
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.8;
+}
+
+@keyframes chevronBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+@keyframes indicatorIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* 编辑提示 */
@@ -217,13 +229,13 @@ section {
 }
 
 section h2 {
-  font-family: 'Space Grotesk', 'Noto Serif SC', sans-serif;
+  font-family: 'Noto Serif SC', 'Space Grotesk', serif;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   margin-bottom: 48px;
   color: var(--ash);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
 }
 
 section h2::after {

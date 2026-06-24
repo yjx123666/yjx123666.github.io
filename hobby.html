@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>兴趣爱好 — 伤口</title>
+<title>兴趣爱好 — Re</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&family=LXGW+WenKai:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="hobby.css">
 </head>
 <body>
 
@@ -25,18 +28,25 @@
 
 <canvas id="particles"></canvas>
 
+<!-- Aurora gradient mesh background -->
+<div class="aurora-bg" aria-hidden="true">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+
 <nav>
   <ul>
-    <li><a href="index.html">首页</a></li>
-    <li><a href="software.html">工具开发</a></li>
-    <li><a href="hobby.html" class="active">兴趣爱好</a></li>
-    <li><a href="life.html">生活分享</a></li>
+    <li><a href="index.html"><i data-lucide="home" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>首页</a></li>
+    <li><a href="software.html"><i data-lucide="wrench" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>工具开发</a></li>
+    <li><a href="hobby.html" class="active"><i data-lucide="palette" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>兴趣爱好</a></li>
+    <li><a href="life.html"><i data-lucide="camera" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>生活分享</a></li>
   </ul>
   <div class="nav-contact">
     <div class="nav-clock" id="navClock"></div>
-    <a href="javascript:void(0)" onclick="copyEmail()">邮箱</a>
-    <a href="https://github.com/yjx123666" target="_blank">GitHub</a>
-    <a href="index.html">微信</a>
+    <a href="javascript:void(0)" onclick="copyEmail()"><i data-lucide="mail" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>邮箱</a>
+    <a href="https://github.com/yjx123666" target="_blank"><i data-lucide="github" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>GitHub</a>
+    <a href="index.html"><i data-lucide="message-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>微信</a>
   </div>
 </nav>
 
@@ -104,114 +114,6 @@
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="" alt="">
 </div>
-
-<style>
-  .photo-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: 16px;
-  }
-  .photo-item {
-    border-radius: 8px;
-    overflow: hidden;
-    aspect-ratio: 4/3;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-  }
-  .photo-item:hover {
-    transform: translateY(-2px);
-  }
-  .photo-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease;
-  }
-  .photo-item:hover img {
-    transform: scale(1.05);
-  }
-  .photo-item.large {
-    grid-column: span 2;
-    aspect-ratio: 8/3;
-  }
-
-  /* 视频网格 */
-  .video-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 16px;
-  }
-  .video-item {
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--slate);
-    border: 1px solid var(--ridge);
-    transition: all 0.3s ease;
-  }
-  .video-item:hover {
-    transform: translateY(-2px);
-    border-color: rgba(212, 160, 83, 0.2);
-  }
-  .video-item video {
-    width: 100%;
-    aspect-ratio: 16/9;
-    display: block;
-    background: #000;
-    border-radius: 8px 8px 0 0;
-  }
-  .video-name {
-    padding: 10px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--fog);
-    text-align: center;
-  }
-
-  @media (max-width: 600px) {
-    .video-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* 灯箱 */
-  .lightbox {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    backdrop-filter: blur(8px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .lightbox.show {
-    display: flex;
-    opacity: 1;
-  }
-  .lightbox img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  }
-
-  @media (max-width: 600px) {
-    .photo-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .photo-item.large {
-      grid-column: span 2;
-    }
-  }
-</style>
 
 <script>
 // Realtime Clock
@@ -284,5 +186,6 @@ window.addEventListener('scroll', function() {
 <script src="theme.js"></script>
 <script src="animations.js"></script>
 <script type="module" src="src/pages/main.ts"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

@@ -4,3 +4,6 @@ dist/
 tools/.edge_profile/
 tools/.douyin_cookies.json
 tools/debug/
+__pycache__/
+*.pyc
+resume/tmp_edge/

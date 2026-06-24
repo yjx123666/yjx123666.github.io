@@ -4,7 +4,7 @@ interface TextToken {
 }
 
 export function initTypingAnimation(): void {
-  const text = '你好，我是 <span style="color:#00d2ff">伤口</span>';
+  const text = '你好，我是 <span style="color:#00d2ff">Re</span>';
   const el = document.getElementById('heroTitle');
   if (!el) return;
 
@@ -53,7 +53,7 @@ export function initTypingAnimation(): void {
     const span = document.createElement('span');
     span.className = 'char';
 
-    if (char === '伤' || char === '口') {
+    if (char === 'R' || char === 'e') {
       span.classList.add('highlight-char');
     }
 

@@ -13,6 +13,7 @@ export default defineConfig({
         gpsDetail: resolve(__dirname, 'gps-detail.html'),
         gisDetail: resolve(__dirname, 'GIS工具详情.html'),
         mediaDetail: resolve(__dirname, '新媒体工具详情.html'),
+        dyCommentTool: resolve(__dirname, 'dy-comment-tool.html'),
       },
     },
     outDir: 'dist',
