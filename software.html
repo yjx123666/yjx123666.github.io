@@ -36,6 +36,7 @@
 <nav>
   <ul>
     <li><a href="index.html"><i data-lucide="home" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>首页</a></li>
+    <li><a href="/map/" target="_blank" style="position:relative;"><i data-lucide="map-pin" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>地图标注<span style="position:absolute;top:-4px;right:-8px;background:linear-gradient(135deg,#ff6b35,#e53935);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;line-height:1.2;">NEW</span></a></li>
     <li><a href="software.html" class="active"><i data-lucide="wrench" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>工具开发</a></li>
     <li><a href="hobby.html"><i data-lucide="palette" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>兴趣爱好</a></li>
     <li><a href="life.html"><i data-lucide="camera" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>生活分享</a></li>
@@ -61,6 +62,16 @@
   </div>
 
   <div class="gallery fade-in">
+    <a href="/map/" target="_blank" class="card" style="border:1px solid rgba(26,115,232,0.3);position:relative;">
+      <div style="position:absolute;top:12px;right:12px;z-index:2;background:linear-gradient(135deg,#ff6b35,#e53935);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;animation:pulse-badge 2s infinite;">✨ NEW</div>
+      <div class="card-img" style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);display:flex;align-items:center;justify-content:center;font-size:72px;">🗺️</div>
+      <div class="card-body">
+        <h3>Web 地图标注系统</h3>
+        <p>全栈地图标注工具，支持多底图切换、点/线/面绘制、图层管理、搜索查询、GeoJSON 导入导出。Vue3 + FastAPI + SQLAlchemy。</p>
+        <div class="card-tags"><span>Vue3</span><span>TypeScript</span><span>Leaflet</span><span>FastAPI</span><span>全栈</span></div>
+      </div>
+    </a>
+
     <a href="gps-detail.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/gps-screenshot.png" alt="GPS系统截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
