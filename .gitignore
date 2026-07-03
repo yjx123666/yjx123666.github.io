@@ -7,3 +7,7 @@ tools/debug/
 __pycache__/
 *.pyc
 resume/tmp_edge/
+resume/backup-original-*/
+resume/render-check/
+resume/prd-pdf/
+resume/*.pdf

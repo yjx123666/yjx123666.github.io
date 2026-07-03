@@ -36,7 +36,7 @@
 </div>
 
 <nav>
-  <ul>
+  <ul id="navMenu">
     <li><a href="index.html"><i data-lucide="home" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>首页</a></li>
     <li><a href="/map/" target="_blank" style="position:relative;"><i data-lucide="map-pin" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>地图标注<span style="position:absolute;top:-4px;right:-8px;background:linear-gradient(135deg,#ff6b35,#e53935);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;line-height:1.2;">NEW</span></a></li>
     <li><a href="software.html"><i data-lucide="wrench" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>工具开发</a></li>
@@ -49,6 +49,11 @@
     <a href="https://github.com/yjx123666" target="_blank"><i data-lucide="github" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>GitHub</a>
     <a href="index.html"><i data-lucide="message-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>微信</a>
   </div>
+  <button class="menu-toggle" id="menuToggle" aria-label="菜单">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </nav>
 
 <div class="admin-bar" id="adminBar">
@@ -151,6 +156,33 @@ function closeLightbox() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
 });
+
+// 移动端菜单切换
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', function() {
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+
+  // 点击菜单项后关闭菜单
+  navMenu.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    });
+  });
+
+  // 点击页面其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
 </script>
 
 <footer>

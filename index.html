@@ -46,7 +46,7 @@
 
 <!-- 导航栏 -->
 <nav>
-  <ul>
+  <ul id="navMenu">
     <li><a href="index.html" class="active"><i data-lucide="home" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>首页</a></li>
     <li><a href="/map/" target="_blank" style="position:relative;"><i data-lucide="map-pin" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>地图标注<span style="position:absolute;top:-4px;right:-8px;background:linear-gradient(135deg,#ff6b35,#e53935);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;line-height:1.2;">NEW</span></a></li>
     <li><a href="software.html"><i data-lucide="wrench" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"></i>工具开发</a></li>
@@ -59,6 +59,11 @@
     <a href="https://github.com/yjx123666" target="_blank"><i data-lucide="github" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>GitHub</a>
     <a href="javascript:void(0)" onclick="showWechat()"><i data-lucide="message-circle" style="width:15px;height:15px;vertical-align:middle;margin-right:3px;"></i>微信</a>
   </div>
+  <button class="menu-toggle" id="menuToggle" aria-label="菜单">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </nav>
 
 <div class="admin-bar" id="adminBar">
@@ -89,13 +94,13 @@
     <div class="hero-coord">N 30°45′ &nbsp; E 104°04′</div>
     <img class="avatar" src="avatar.jpg" alt="头像">
     <h1 id="heroTitle" class="typing-cursor"></h1>
-    <p class="hero-description fade-in">写代码、画地图、记录生活的普通大学生。喜欢用 Python 解决问题，用 Procreate 随手画画，在代码和现实之间寻找平衡。</p>
+    <p class="hero-description fade-in">用数据驱动产品增长的运营人。能自己写脚本采集竞品数据、分析爆款规律、生成可视化报告，相信好的策略应该建立在数据洞察之上。</p>
     <div class="tags fade-in">
-      <span class="tag"><i data-lucide="code-2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Python</span>
-      <span class="tag"><i data-lucide="map" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>测绘工程</span>
       <span class="tag"><i data-lucide="bar-chart-3" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>数据分析</span>
-      <span class="tag"><i data-lucide="globe" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Web 开发</span>
-      <span class="tag"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>自动化办公</span>
+      <span class="tag"><i data-lucide="trending-up" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>用户增长</span>
+      <span class="tag"><i data-lucide="code-2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>产品运营</span>
+      <span class="tag"><i data-lucide="globe" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>新媒体</span>
+      <span class="tag"><i data-lucide="settings" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>自动化工具</span>
     </div>
   </div>
   <canvas id="contourCanvas"></canvas>
@@ -120,34 +125,34 @@
     <a href="gps-detail.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/gps-screenshot.png" alt="GPS系统截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3><i data-lucide="satellite" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--amber);"></i>GPS 位移数据分析与预测系统</h3>
-        <p>毕业设计项目。基于 ARIMA 时间序列模型的 GPS 坐标时间序列分析与位移预测桌面应用，支持数据预处理、自动选参、模型诊断和精度验证。</p>
-        <div class="card-tags"><span>Python</span><span>ARIMA</span><span>tkinter</span><span>statsmodels</span></div>
+        <h3><i data-lucide="satellite" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--amber);"></i>数据预测与分析系统</h3>
+        <p>基于 ARIMA 时间序列模型的数据分析与预测平台，支持异常值检测、趋势预测、滚动验证和多维可视化。具备将数据分析能力迁移至用户增长趋势预测的能力。</p>
+        <div class="card-tags"><span>Python</span><span>ARIMA</span><span>数据分析</span><span>预测模型</span></div>
       </div>
     </a>
     <a href="GIS工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/media/gis-screenshot.png" alt="GIS工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3><i data-lucide="map-pin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--cyan);"></i>GIS 批量格式转换工具</h3>
-        <p>ArcGIS Python Toolbox，支持 SHP / DWG / MDB / GDB / KML 五种格式批量互转，兼容 ArcMap 10.8 和 ArcGIS Pro。纯 Python 2.7 编写，无需额外依赖。</p>
-        <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>arcpy</span><span>GIS</span></div>
+        <h3><i data-lucide="map-pin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:var(--cyan);"></i>批量自动化工具</h3>
+        <p>ArcGIS Python Toolbox，支持多种格式批量互转，解决格式兼容的重复劳动问题。具备自动化思维，善于用技术手段提升工作效率。</p>
+        <div class="card-tags"><span>Python</span><span>ArcGIS</span><span>自动化</span><span>效率工具</span></div>
       </div>
     </a>
     <a href="新媒体工具详情.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#1c2533,#2a3a4a)"><img src="public/media-tool-screenshot.png" alt="新媒体工具截图" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="card-body">
-        <h3><i data-lucide="trending-up" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:#e17055;"></i>数据采集与分析工具</h3>
-        <p>带 GUI 界面的桌面应用，支持抖音/小红书作品批量采集、账号整体分析（爆款率、Top5 排行）、导出 Excel 和可视化图表。</p>
-        <div class="card-tags"><span>Python</span><span>Selenium</span><span>tkinter</span><span>pandas</span><span>matplotlib</span></div>
+        <h3><i data-lucide="trending-up" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;color:#e17055;"></i>竞品数据分析工具</h3>
+        <p>支持抖音/小红书作品批量采集、账号整体分析（爆款率、Top5 排行）、导出 Excel 和可视化图表。用于竞品账号监控、KOL 投放前数据筛选、自身账号内容复盘。</p>
+        <div class="card-tags"><span>Python</span><span>Selenium</span><span>数据分析</span><span>竞品调研</span></div>
       </div>
     </a>
 
     <a href="dy-comment-tool.html" class="card">
       <div class="card-img" style="background:linear-gradient(135deg,#0f0f1a,#1a1a2e,#2d1b69);display:flex;align-items:center;justify-content:center;font-size:48px;color:#8b5cf6;">💬</div>
       <div class="card-body">
-        <h3>抖音评论抓取工具 <span style="font-size:12px;color:var(--amber);background:var(--amber-dim);padding:2px 8px;border-radius:4px;margin-left:8px;">待改进</span></h3>
-        <p>基于 Playwright 的视频评论自动抓取桌面应用，采用 API 拦截 + DOM 解析 + RENDER_DATA 三层兜底策略，支持 Cookie 复用和 Excel 导出。</p>
-        <div class="card-tags"><span>Python</span><span>Playwright</span><span>PyQt5</span><span>openpyxl</span></div>
+        <h3>用户评论分析工具 <span style="font-size:12px;color:var(--amber);background:var(--amber-dim);padding:2px 8px;border-radius:4px;margin-left:8px;">待改进</span></h3>
+        <p>基于 Playwright 的视频评论自动抓取工具，采用多层兜底策略，支持数据导出。可用于用户反馈分析、内容优化和产品迭代决策。</p>
+        <div class="card-tags"><span>Python</span><span>Playwright</span><span>用户研究</span><span>数据采集</span></div>
       </div>
     </a>
   </div>
@@ -172,6 +177,33 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+// 移动端菜单切换
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', function() {
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+
+  // 点击菜单项后关闭菜单
+  navMenu.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    });
+  });
+
+  // 点击页面其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
 
 // 加载动画
 window.addEventListener('load', function() {

@@ -12,14 +12,20 @@
 <body>
 <nav>
   <div class="logo">GIS 批量格式转换工具</div>
-  <ul>
+  <ul id="navMenu">
     <li><a href="index.html">首页</a></li>
     <li><a href="/map/" target="_blank" style="position:relative;">地图标注<span style="position:absolute;top:-4px;right:-8px;background:linear-gradient(135deg,#ff6b35,#e53935);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;">NEW</span></a></li>
     <li><a href="software.html" class="active">工具开发</a></li>
     <li><a href="hobby.html">兴趣爱好</a></li>
     <li><a href="life.html">生活分享</a></li>
   </ul>
+  <button class="menu-toggle" id="menuToggle" aria-label="菜单">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </nav>
+
 <div class="container">
   <div class="page-header">
     <div class="icon">🗺️</div>
@@ -115,5 +121,36 @@ def _is_arcgis_pro():
 <footer>
   <p>GIS 批量格式转换工具 &copy; 2026 &nbsp;|&nbsp; <a href="software.html">返回工具开发</a></p>
 </footer>
+
+<script>
+// 移动端菜单切换
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', function() {
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+
+  // 点击菜单项后关闭菜单
+  navMenu.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    });
+  });
+
+  // 点击页面其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
+</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

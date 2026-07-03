@@ -4,13 +4,12 @@ interface TextToken {
 }
 
 export function initTypingAnimation(): void {
-  const text = '你好，我是 <span style="color:#00d2ff">Re</span>';
+  const text = '用数据驱动产品增长';
   const el = document.getElementById('heroTitle');
   if (!el) return;
 
   const tokens: TextToken[] = [];
 
-  // Pre-parse text, separating HTML tags and normal characters
   function parseText(): void {
     let inTag = false;
     let inEntity = false;
@@ -48,15 +47,9 @@ export function initTypingAnimation(): void {
 
   parseText();
 
-  // Create a character span element
   function createCharElement(char: string, _index: number): HTMLSpanElement {
     const span = document.createElement('span');
     span.className = 'char';
-
-    if (char === 'R' || char === 'e') {
-      span.classList.add('highlight-char');
-    }
-
     span.textContent = char;
     return span;
   }
