@@ -266,37 +266,32 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .map-info {
-    bottom: 0;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 6px;
-    padding: 6px 10px;
+    left: auto;
+    right: 10px;
+    bottom: 66px;
+    width: auto;
+    align-items: center;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
+    background: transparent;
+    border-top: none;
     font-size: 11px;
   }
 
   .coord {
-    overflow-x: auto;
-    white-space: nowrap;
-    padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .coord::-webkit-scrollbar {
     display: none;
-  }
-
-  .coord-value {
-    min-width: auto;
   }
 
   .measure-group {
+    max-width: calc(100vw - 160px);
+    gap: 6px;
+    padding: 6px;
     overflow-x: auto;
-    padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .measure-group::-webkit-scrollbar {
-    display: none;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #e0e0e0;
+    border-radius: 18px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
   }
 
   .measure-btn {
@@ -306,15 +301,14 @@ onMounted(() => {
 
   .measure-text {
     flex: 0 0 auto;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-}
 
-@media (max-width: 420px) {
-  .coord-label:nth-of-type(1),
-  .coord-value:nth-of-type(1),
-  .coord-label:nth-of-type(2),
-  .coord-value:nth-of-type(2) {
-    display: none;
+  :global([data-theme='dark']) .measure-group {
+    background: rgba(30, 30, 30, 0.94);
+    border-color: #333;
   }
 }
 </style>

@@ -12,6 +12,7 @@ import { Plus, Eye, EyeOff, Trash2 } from '@lucide/vue'
 
 const newLayerName = ref('')
 const showInput = ref(false)
+const mobileExpanded = ref(false)
 
 async function handleAddLayer() {
   const name = newLayerName.value.trim()
@@ -33,10 +34,10 @@ async function handleDelete(id: string) {
 </script>
 
 <template>
-  <div class="layer-panel">
-    <div class="layer-header">
+  <div :class="['layer-panel', { expanded: mobileExpanded }]">
+    <div class="layer-header" @click="mobileExpanded = !mobileExpanded">
       <h4>图层管理</h4>
-      <button class="add-btn" @click="showInput = !showInput" title="添加图层">
+      <button class="add-btn" @click.stop="showInput = !showInput; mobileExpanded = true" title="添加图层">
         <Plus :size="16" />
       </button>
     </div>
@@ -285,15 +286,26 @@ async function handleDelete(id: string) {
 @media (max-width: 768px) {
   .layer-panel {
     left: 10px;
-    right: 10px;
-    bottom: 88px;
-    width: auto;
+    right: auto;
+    bottom: 68px;
+    width: 128px;
     max-height: 34vh;
-    border-radius: 14px 14px 0 0;
+    border-radius: 18px;
+    transition: width 0.2s ease, border-radius 0.2s ease, bottom 0.2s ease;
+  }
+
+  .layer-panel.expanded {
+    left: 10px;
+    right: 10px;
+    bottom: 112px;
+    width: auto;
+    border-radius: 14px;
   }
 
   .layer-header {
     padding: 9px 12px;
+    border-bottom: none;
+    cursor: pointer;
   }
 
   .layer-header h4 {
@@ -302,6 +314,15 @@ async function handleDelete(id: string) {
 
   .new-layer {
     padding: 8px 10px;
+  }
+
+  .layer-panel:not(.expanded) .new-layer,
+  .layer-panel:not(.expanded) .layer-list {
+    display: none;
+  }
+
+  .layer-panel.expanded .layer-header {
+    border-bottom: 1px solid #eee;
   }
 
   .new-layer .input,
