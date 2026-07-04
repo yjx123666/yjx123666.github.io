@@ -405,4 +405,55 @@ function handleDelete() {
 :global([data-theme='dark']) .btn-danger:hover {
   background: #2a1a1a;
 }
+
+@media (max-width: 768px) {
+  .panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: min(82dvh, 620px);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.18);
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+  }
+
+  .panel-body {
+    padding: 14px 16px;
+  }
+
+  .style-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .input,
+  .btn {
+    min-height: 40px;
+    font-size: 15px;
+  }
+
+  .input-sm {
+    flex: 1;
+    width: auto;
+  }
+
+  .color-picker {
+    width: 42px;
+    height: 42px;
+  }
+
+  .panel-footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .slide-enter-from,
+  .slide-leave-to {
+    transform: translateY(100%);
+  }
+}
 </style>

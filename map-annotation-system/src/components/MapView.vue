@@ -378,4 +378,44 @@ watch(selectedId, () => highlightSelected())
   background: #1a73e8;
   color: #fff;
 }
+
+@media (max-width: 768px) {
+  .tile-switcher {
+    top: 58px;
+    left: 10px;
+    right: auto;
+    max-width: calc(100vw - 20px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tile-switcher::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tile-btn {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .loading-overlay {
+    top: 104px;
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+  }
+
+  :global(.leaflet-top.leaflet-left) {
+    top: 108px;
+  }
+
+  :global(.leaflet-bottom.leaflet-right) {
+    bottom: 98px;
+  }
+
+  :global(.leaflet-bottom.leaflet-left) {
+    bottom: 98px;
+  }
+}
 </style>

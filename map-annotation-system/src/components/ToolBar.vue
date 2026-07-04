@@ -195,4 +195,61 @@ async function handleImport(event: Event) {
 :global([data-theme='dark']) .tool-btn.secondary:hover {
   background: #1a2744;
 }
+
+@media (max-width: 768px) {
+  .toolbar {
+    height: auto;
+    min-height: 48px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .toolbar-left {
+    min-width: 0;
+  }
+
+  .toolbar-logo-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .logo {
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .toolbar-right {
+    flex: 1;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .count {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .tool-btn {
+    min-height: 34px;
+    padding: 6px 9px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .logo {
+    display: none;
+  }
+
+  .count {
+    max-width: 58px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
 </style>

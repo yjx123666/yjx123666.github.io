@@ -263,4 +263,58 @@ onMounted(() => {
   background: #1a73e8;
   color: #fff;
 }
+
+@media (max-width: 768px) {
+  .map-info {
+    bottom: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .coord {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .coord::-webkit-scrollbar {
+    display: none;
+  }
+
+  .coord-value {
+    min-width: auto;
+  }
+
+  .measure-group {
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .measure-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .measure-btn {
+    min-height: 32px;
+    flex: 0 0 auto;
+  }
+
+  .measure-text {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .coord-label:nth-of-type(1),
+  .coord-value:nth-of-type(1),
+  .coord-label:nth-of-type(2),
+  .coord-value:nth-of-type(2) {
+    display: none;
+  }
+}
 </style>

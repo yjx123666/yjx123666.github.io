@@ -242,4 +242,31 @@ function getTypeLabel(type: string): string {
 :global([data-theme='dark']) .result-name {
   color: #eee;
 }
+
+@media (max-width: 768px) {
+  .search-panel {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+
+  .search-box {
+    min-height: 40px;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .search-input {
+    font-size: 15px;
+  }
+
+  .results {
+    max-height: min(280px, 42vh);
+  }
+
+  .result-item {
+    padding: 12px 14px;
+  }
+}
 </style>

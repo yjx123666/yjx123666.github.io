@@ -306,4 +306,68 @@ function toggleSidebar() {
   position: relative;
   overflow: hidden;
 }
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column-reverse;
+    height: 100dvh;
+  }
+
+  .sidebar,
+  .sidebar.collapsed {
+    width: 100%;
+    height: 58px;
+    flex-direction: row;
+    align-items: center;
+    overflow: visible;
+  }
+
+  .sidebar-logo,
+  .sidebar-footer,
+  .expand-arrow,
+  .submenu {
+    display: none;
+  }
+
+  .sidebar-menu {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 8px;
+    overflow: visible;
+  }
+
+  .menu-group {
+    flex: 1;
+    margin: 0;
+  }
+
+  .menu-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    height: 46px;
+    margin: 0 4px;
+    padding: 5px 8px;
+    border-radius: 10px;
+  }
+
+  .menu-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menu-label {
+    display: inline !important;
+    flex: none;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .admin-main {
+    height: calc(100dvh - 58px);
+    flex: none;
+  }
+}
 </style>

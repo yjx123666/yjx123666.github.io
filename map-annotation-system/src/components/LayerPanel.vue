@@ -281,4 +281,41 @@ async function handleDelete(id: string) {
 :global([data-theme='dark']) .delete-btn:hover {
   color: #e57373;
 }
+
+@media (max-width: 768px) {
+  .layer-panel {
+    left: 10px;
+    right: 10px;
+    bottom: 88px;
+    width: auto;
+    max-height: 34vh;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .layer-header {
+    padding: 9px 12px;
+  }
+
+  .layer-header h4 {
+    font-size: 13px;
+  }
+
+  .new-layer {
+    padding: 8px 10px;
+  }
+
+  .new-layer .input,
+  .confirm-btn {
+    min-height: 36px;
+  }
+
+  .layer-list {
+    max-height: calc(34vh - 44px);
+  }
+
+  .layer-item {
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+}
 </style>
